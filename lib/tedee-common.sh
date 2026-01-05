@@ -112,26 +112,21 @@ attempt_unlock() {
     echo "$HTTP_CODE"
 }
 
-# Wait for door to reach a specific state
-# Parameters: $1 = target_state, $2 = in_progress_state, $3 = notification_message
-wait_for_state() {
-    TARGET_STATE="$1"
-    IN_PROGRESS_STATE="$2"
-    NOTIFICATION_MSG="$3"
-
+# Wait for door to close
+# Monitors the lock state until it reaches closed (state 6)
+# Sends a notification when closing begins (state 5)
+wait_for_closed() {
     MAX_WAIT=$((MAX_RETRIES * SLEEP_BETWEEN))
     ELAPSED=0
     IN_PROGRESS=0
 
     while [ $ELAPSED -lt $MAX_WAIT ]; do
         STATE=$(get_lock_state)
-        if [ "$STATE" = "$TARGET_STATE" ]; then
+        if [ "$STATE" = "6" ]; then
             return 0
-        elif [ "$STATE" = "$IN_PROGRESS_STATE" ] && [ "$IN_PROGRESS" = "0" ]; then
+        elif [ "$STATE" = "5" ] && [ "$IN_PROGRESS" = "0" ]; then
             IN_PROGRESS=1
-            if [ -n "$NOTIFICATION_MSG" ]; then
-                send_telegram "$NOTIFICATION_MSG"
-            fi
+            send_telegram "La puerta se está cerrando..."
         fi
         sleep $SLEEP_BETWEEN
         ELAPSED=$((ELAPSED + SLEEP_BETWEEN))

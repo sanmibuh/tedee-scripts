@@ -22,14 +22,9 @@ lock_door_with_retries() {
     done
 }
 
-# Wait for door to finish closing
-wait_for_lock() {
-    wait_for_state "6" "5" "La puerta se está cerrando..."
-}
-
 # Notify final state
 notify_final_state() {
-    if wait_for_lock; then
+    if wait_for_closed; then
         send_telegram "La puerta se ha cerrado correctamente."
         log "INFO" "Door closed successfully."
     else
