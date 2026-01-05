@@ -18,12 +18,12 @@ echo
 
 # Check if config exists
 if [ -f "$SCRIPT_DIR/config/tedee.conf" ]; then
-    echo "${GREEN}✓${NC} Configuration found: config/tedee.conf"
+    echo -e "${GREEN}✓${NC} Configuration found: config/tedee.conf"
     echo
     read -p "Do you want to reconfigure? (y/N): " RECONFIGURE
     echo
     if [ "$RECONFIGURE" != "y" ] && [ "$RECONFIGURE" != "Y" ]; then
-        echo "${GREEN}Setup complete!${NC}"
+        echo -e "${GREEN}Setup complete!${NC}"
         echo
         echo "You can now use:"
         echo "  ./bin/close  - Lock the door"
@@ -31,28 +31,53 @@ if [ -f "$SCRIPT_DIR/config/tedee.conf" ]; then
         exit 0
     fi
 else
-    echo "${YELLOW}!${NC} No configuration found"
+    echo -e "${YELLOW}!${NC} No configuration found"
     echo
 fi
 
 # Create config from template
 if [ ! -f "$SCRIPT_DIR/config/tedee.conf.template" ]; then
-    echo "${RED}✗${NC} Error: config/tedee.conf.template not found"
+    echo -e "${RED}✗${NC} Error: config/tedee.conf.template not found"
     exit 1
 fi
 
 echo "Creating configuration file..."
 cp "$SCRIPT_DIR/config/tedee.conf.template" "$SCRIPT_DIR/config/tedee.conf"
-echo "${GREEN}✓${NC} Created config/tedee.conf"
+echo -e "${GREEN}✓${NC} Created config/tedee.conf"
 echo
 
 # Interactive configuration
 echo "Please enter your Tedee configuration:"
+echo "Note: All three fields are mandatory"
 echo
 
-read -p "Bridge IP address: " BRIDGE_IP
-read -p "Tedee API Token: " TEDEE_TOKEN
-read -p "Device ID: " DEVICE_ID
+# Loop until all mandatory fields are filled
+while true; do
+    read -p "Bridge IP address: " BRIDGE_IP
+    if [ -z "$BRIDGE_IP" ]; then
+        echo -e "${RED}✗${NC} Bridge IP is required!"
+        continue
+    fi
+    break
+done
+
+while true; do
+    read -p "Tedee API Token: " TEDEE_TOKEN
+    if [ -z "$TEDEE_TOKEN" ]; then
+        echo -e "${RED}✗${NC} Tedee API Token is required!"
+        continue
+    fi
+    break
+done
+
+while true; do
+    read -p "Device ID: " DEVICE_ID
+    if [ -z "$DEVICE_ID" ]; then
+        echo -e "${RED}✗${NC} Device ID is required!"
+        continue
+    fi
+    break
+done
 
 echo
 echo "Optional - Telegram notifications (press Enter to skip):"
@@ -75,19 +100,19 @@ if command -v sed >/dev/null 2>&1; then
     fi
 
     echo
-    echo "${GREEN}✓${NC} Configuration saved successfully!"
+    echo -e "${GREEN}✓${NC} Configuration saved successfully!"
 else
     echo
-    echo "${YELLOW}!${NC} Please manually edit config/tedee.conf with your values"
+    echo -e "${YELLOW}!${NC} Please manually edit config/tedee.conf with your values"
 fi
 
 # Make scripts executable
 chmod +x "$SCRIPT_DIR/bin/"*
-echo "${GREEN}✓${NC} Scripts are now executable"
+echo -e "${GREEN}✓${NC} Scripts are now executable"
 
 echo
 echo "========================================"
-echo "${GREEN}  Setup Complete!${NC}"
+echo -e "${GREEN}  Setup Complete!${NC}"
 echo "========================================"
 echo
 echo "Available commands:"

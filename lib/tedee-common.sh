@@ -25,6 +25,25 @@ load_config() {
     : "${DEVICE_ID:?DEVICE_ID not set in config}"
     : "${MAX_RETRIES:=3}"
     : "${SLEEP_BETWEEN:=5}"
+
+    # Check for empty values
+    if [ -z "$BRIDGE_IP" ]; then
+        log "ERROR" "BRIDGE_IP is empty in config file"
+        log "ERROR" "Please run ./setup.sh to configure your Tedee Bridge"
+        exit 1
+    fi
+
+    if [ -z "$TEDEE_TOKEN" ]; then
+        log "ERROR" "TEDEE_TOKEN is empty in config file"
+        log "ERROR" "Please run ./setup.sh to configure your Tedee API Token"
+        exit 1
+    fi
+
+    if [ -z "$DEVICE_ID" ]; then
+        log "ERROR" "DEVICE_ID is empty in config file"
+        log "ERROR" "Please run ./setup.sh to configure your Tedee Device ID"
+        exit 1
+    fi
 }
 
 # ===== LOGGING =====
