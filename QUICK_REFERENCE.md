@@ -9,7 +9,7 @@
 # Close/lock the door
 ./bin/close
 
-# Update repository
+# Update scripts
 ./bin/update
 ```
 
@@ -56,8 +56,8 @@ Edit `config/tedee.conf`:
 | `DEVICE_ID` | ✅ Yes | Lock device ID |
 | `TELEGRAM_TOKEN` | ❌ No | Telegram bot token (for notifications) |
 | `CHAT_ID` | ❌ No | Telegram chat ID (for notifications) |
-| `MAX_RETRIES` | ❌ No | Number of retry attempts (default: 3) |
-| `SLEEP_BETWEEN` | ❌ No | Seconds between retries (default: 5) |
+| `MAX_RETRIES` | ✅ Yes | Number of retry attempts (default: 3) |
+| `SLEEP_BETWEEN` | ✅ Yes | Seconds between retries (default: 5) |
 
 ## 🔐 Lock States
 
