@@ -70,9 +70,11 @@ send_telegram() {
 
     # Only send if Telegram is configured
     if [ -n "$TELEGRAM_TOKEN" ] && [ -n "$CHAT_ID" ]; then
-        curl -s -S -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
+        if ! curl -s -S -X POST "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage" \
              -d chat_id="${CHAT_ID}" \
-             -d text="$MESSAGE" >/dev/null 2>&1
+             -d text="$MESSAGE" >/dev/null 2>&1; then
+            log "WARN" "Failed to send Telegram notification: $MESSAGE"
+        fi
     fi
 }
 
