@@ -15,7 +15,7 @@ load_config() {
         . "$CONFIG_FILE"
     else
         log "ERROR" "Configuration file not found: $CONFIG_FILE"
-        log "ERROR" "Please copy config/tedee.conf.template to config/tedee.conf and configure it."
+        log "ERROR" "Please run ./setup.sh to create and configure it."
         exit 1
     fi
 
