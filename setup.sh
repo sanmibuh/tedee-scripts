@@ -16,7 +16,8 @@ echo "  Tedee Scripts - Setup"
 echo "========================================"
 echo
 
-# Check if config exists
+# Check if config exists and load current values
+RECONFIGURING=false
 if [ -f "$SCRIPT_DIR/config/tedee.conf" ]; then
     echo -e "${GREEN}✓${NC} Configuration found: config/tedee.conf"
     echo
@@ -30,19 +31,34 @@ if [ -f "$SCRIPT_DIR/config/tedee.conf" ]; then
         echo "  ./bin/update - Update repository"
         exit 0
     fi
+
+    # Load existing values for reconfiguration
+    RECONFIGURING=true
+    # shellcheck source=/dev/null
+    . "$SCRIPT_DIR/config/tedee.conf"
 else
     echo -e "${YELLOW}!${NC} No configuration found"
     echo
 fi
 
 # Interactive configuration
-echo "Please enter your Tedee configuration:"
-echo "Note: All three fields are mandatory"
+if [ "$RECONFIGURING" = true ]; then
+    echo "Reconfiguring (press Enter to keep current value):"
+else
+    echo "Please enter your Tedee configuration:"
+    echo "Note: All three fields are mandatory"
+fi
 echo
 
 # Loop until all mandatory fields are filled
 while true; do
-    read -p "Bridge IP address: " BRIDGE_IP
+    if [ "$RECONFIGURING" = true ]; then
+        read -p "Bridge IP address [current: $BRIDGE_IP]: " NEW_BRIDGE_IP
+        BRIDGE_IP=${NEW_BRIDGE_IP:-$BRIDGE_IP}
+    else
+        read -p "Bridge IP address: " BRIDGE_IP
+    fi
+
     if [ -z "$BRIDGE_IP" ]; then
         echo -e "${RED}✗${NC} Bridge IP is required!"
         continue
@@ -51,7 +67,13 @@ while true; do
 done
 
 while true; do
-    read -p "Tedee API Token: " TEDEE_TOKEN
+    if [ "$RECONFIGURING" = true ]; then
+        read -p "Tedee API Token [current: ${TEDEE_TOKEN:0:10}...]: " NEW_TEDEE_TOKEN
+        TEDEE_TOKEN=${NEW_TEDEE_TOKEN:-$TEDEE_TOKEN}
+    else
+        read -p "Tedee API Token: " TEDEE_TOKEN
+    fi
+
     if [ -z "$TEDEE_TOKEN" ]; then
         echo -e "${RED}✗${NC} Tedee API Token is required!"
         continue
@@ -60,7 +82,13 @@ while true; do
 done
 
 while true; do
-    read -p "Device ID: " DEVICE_ID
+    if [ "$RECONFIGURING" = true ]; then
+        read -p "Device ID [current: $DEVICE_ID]: " NEW_DEVICE_ID
+        DEVICE_ID=${NEW_DEVICE_ID:-$DEVICE_ID}
+    else
+        read -p "Device ID: " DEVICE_ID
+    fi
+
     if [ -z "$DEVICE_ID" ]; then
         echo -e "${RED}✗${NC} Device ID is required!"
         continue
@@ -69,14 +97,33 @@ while true; do
 done
 
 echo
-echo "Optional - Telegram notifications (press Enter to skip):"
-read -p "Telegram Bot Token (optional): " TELEGRAM_TOKEN
+if [ "$RECONFIGURING" = true ]; then
+    echo "Telegram notifications (press Enter to keep current, type 'none' to disable):"
+    read -p "Telegram Bot Token [current: $([ -n "$TELEGRAM_TOKEN" ] && echo "${TELEGRAM_TOKEN:0:10}..." || echo "not set")]: " NEW_TELEGRAM_TOKEN
+
+    # Check if user wants to unset
+    if [ "$NEW_TELEGRAM_TOKEN" = "none" ] || [ "$NEW_TELEGRAM_TOKEN" = "NONE" ]; then
+        TELEGRAM_TOKEN=""
+    elif [ -n "$NEW_TELEGRAM_TOKEN" ]; then
+        TELEGRAM_TOKEN="$NEW_TELEGRAM_TOKEN"
+    fi
+    # else keep current value (empty NEW_TELEGRAM_TOKEN)
+else
+    echo "Optional - Telegram notifications (press Enter to skip):"
+    read -p "Telegram Bot Token (optional): " TELEGRAM_TOKEN
+fi
 
 # Only ask for Chat ID if Telegram Token was provided
 if [ -n "$TELEGRAM_TOKEN" ]; then
     # If token is provided, Chat ID becomes mandatory
     while true; do
-        read -p "Telegram Chat ID (required): " CHAT_ID
+        if [ "$RECONFIGURING" = true ]; then
+            read -p "Telegram Chat ID [current: $CHAT_ID]: " NEW_CHAT_ID
+            CHAT_ID=${NEW_CHAT_ID:-$CHAT_ID}
+        else
+            read -p "Telegram Chat ID (required): " CHAT_ID
+        fi
+
         if [ -z "$CHAT_ID" ]; then
             echo -e "${RED}✗${NC} Chat ID is required when Telegram Token is set!"
             continue
@@ -85,6 +132,23 @@ if [ -n "$TELEGRAM_TOKEN" ]; then
     done
 else
     CHAT_ID=""
+fi
+
+echo
+if [ "$RECONFIGURING" = true ]; then
+    echo "Retry Configuration (press Enter to keep current):"
+    read -p "Maximum retry attempts [current: $MAX_RETRIES - default: 3]: " NEW_MAX_RETRIES
+    MAX_RETRIES=${NEW_MAX_RETRIES:-$MAX_RETRIES}
+
+    read -p "Seconds between retries [current: $SLEEP_BETWEEN - default: 5]: " NEW_SLEEP_BETWEEN
+    SLEEP_BETWEEN=${NEW_SLEEP_BETWEEN:-$SLEEP_BETWEEN}
+else
+    echo "Retry Configuration (press Enter for defaults):"
+    read -p "Maximum retry attempts [default: 3]: " MAX_RETRIES
+    MAX_RETRIES=${MAX_RETRIES:-3}
+
+    read -p "Seconds between retries [default: 5]: " SLEEP_BETWEEN
+    SLEEP_BETWEEN=${SLEEP_BETWEEN:-5}
 fi
 
 # Create config file directly
@@ -114,8 +178,8 @@ TELEGRAM_TOKEN="$TELEGRAM_TOKEN"
 CHAT_ID="$CHAT_ID"
 
 # Retry Configuration
-MAX_RETRIES=3
-SLEEP_BETWEEN=5
+MAX_RETRIES=$MAX_RETRIES
+SLEEP_BETWEEN=$SLEEP_BETWEEN
 EOF
 
 echo

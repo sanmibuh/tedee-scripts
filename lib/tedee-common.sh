@@ -23,8 +23,8 @@ load_config() {
     : "${BRIDGE_IP:?BRIDGE_IP not set in config}"
     : "${TEDEE_TOKEN:?TEDEE_TOKEN not set in config}"
     : "${DEVICE_ID:?DEVICE_ID not set in config}"
-    : "${MAX_RETRIES:=3}"
-    : "${SLEEP_BETWEEN:=5}"
+    : "${MAX_RETRIES:?MAX_RETRIES not set in config}"
+    : "${SLEEP_BETWEEN:?SLEEP_BETWEEN not set in config}"
 
     # Check for empty values
     if [ -z "$BRIDGE_IP" ]; then
@@ -42,6 +42,18 @@ load_config() {
     if [ -z "$DEVICE_ID" ]; then
         log "ERROR" "DEVICE_ID is empty in config file"
         log "ERROR" "Please run ./setup.sh to configure your Tedee Device ID"
+        exit 1
+    fi
+
+    if [ -z "$MAX_RETRIES" ]; then
+        log "ERROR" "MAX_RETRIES is empty in config file"
+        log "ERROR" "Please run ./setup.sh to configure retry settings"
+        exit 1
+    fi
+
+    if [ -z "$SLEEP_BETWEEN" ]; then
+        log "ERROR" "SLEEP_BETWEEN is empty in config file"
+        log "ERROR" "Please run ./setup.sh to configure retry settings"
         exit 1
     fi
 }
