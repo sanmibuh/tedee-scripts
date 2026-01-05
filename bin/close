@@ -1,0 +1,59 @@
+#!/bin/sh
+
+# Tedee Smart Lock - Close/Lock Script
+# Locks the Tedee smart lock via the Bridge API
+
+# Load common functions
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+. "$SCRIPT_DIR/lib/tedee-common.sh"
+
+# ===== LOCK FUNCTIONS =====
+
+# Lock door with retries
+lock_door_with_retries() {
+    RETRIES=0
+    while [ $RETRIES -lt $MAX_RETRIES ]; do
+        HTTP_CODE=$(attempt_lock)
+        if [ "$HTTP_CODE" = "204" ]; then
+            break
+        fi
+        RETRIES=$((RETRIES+1))
+        sleep $SLEEP_BETWEEN
+    done
+}
+
+# Notify final state
+notify_final_state() {
+    if wait_for_closed; then
+        send_telegram "🔐 La puerta se ha cerrado correctamente."
+        log "INFO" "Door closed successfully."
+    else
+        send_telegram "❌ La puerta NO se ha cerrado. Estado actual: $(get_lock_state)"
+        log "ERROR" "Door failed to close. Current state: $(get_lock_state)"
+        exit 1
+    fi
+}
+
+# Check if door is already closed
+check_door_closed() {
+    if door_closed; then
+        send_telegram "🚪 La puerta ya estaba cerrada."
+        log "INFO" "Door is already closed. No action needed."
+        exit 0
+    fi
+}
+
+# ===== MAIN =====
+
+main() {
+    load_config
+    require_bridge_online
+    check_door_closed
+
+    log "INFO" "Closing door..."
+    lock_door_with_retries
+    notify_final_state
+}
+
+main
+

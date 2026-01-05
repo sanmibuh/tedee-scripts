@@ -1,0 +1,47 @@
+#!/bin/sh
+
+# Tedee Scripts - Update Script
+# Updates the repository to the latest version from origin/main
+
+# Load common functions for logging
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+. "$SCRIPT_DIR/lib/tedee-common.sh"
+
+# ===== FUNCTIONS =====
+
+fetch_latest_changes() {
+    log "INFO" "Fetching latest changes from origin..."
+    git fetch origin
+
+    if [ $? -ne 0 ]; then
+        log "ERROR" "Failed to fetch from origin"
+        return 1
+    fi
+
+    return 0
+}
+
+checkout_main_branch() {
+    log "INFO" "Checking out origin/main..."
+    git checkout -B main origin/main
+
+    if [ $? -ne 0 ]; then
+        log "ERROR" "Failed to checkout origin/main"
+        return 1
+    fi
+
+    return 0
+}
+
+# ===== MAIN =====
+
+cd "$SCRIPT_DIR" || exit 1
+
+fetch_latest_changes || exit 1
+
+checkout_main_branch || exit 1
+
+log "INFO" "Update completed successfully!"
+log "INFO" "Repository location: $SCRIPT_DIR"
+exit 0
+

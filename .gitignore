@@ -1,5 +1,6 @@
 # IDE
 .idea
 
-# Config
-tedee.conf
+# Ignore generated configuration file
+config/tedee.conf
+
