@@ -3,12 +3,26 @@
 # Common functions for Tedee scripts
 # This library provides shared functionality for interacting with Tedee Bridge
 
+# ===== LOGGING =====
+
+# Log message with timestamp and level (SLF4J style)
+# Parameters: $1 = level (INFO, WARN, ERROR, DEBUG), $2 = message
+log() {
+    LEVEL="$1"
+    MESSAGE="$2"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$LEVEL] $MESSAGE"
+}
+
 # ===== CONFIGURATION =====
 
 # Load configuration file
 load_config() {
     SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-    CONFIG_FILE="$SCRIPT_DIR/config/tedee.conf"
+    CONFIG_DIR="$SCRIPT_DIR/config"
+    CONFIG_FILE="$CONFIG_DIR/tedee.conf"
+
+    # Ensure config directory exists
+    mkdir -p "$CONFIG_DIR"
 
     if [ -f "$CONFIG_FILE" ]; then
         # shellcheck source=/dev/null
@@ -19,14 +33,7 @@ load_config() {
         exit 1
     fi
 
-    # Validate required variables
-    : "${BRIDGE_IP:?BRIDGE_IP not set in config}"
-    : "${TEDEE_TOKEN:?TEDEE_TOKEN not set in config}"
-    : "${DEVICE_ID:?DEVICE_ID not set in config}"
-    : "${MAX_RETRIES:?MAX_RETRIES not set in config}"
-    : "${SLEEP_BETWEEN:?SLEEP_BETWEEN not set in config}"
-
-    # Check for empty values
+    # Validate required configuration values
     if [ -z "$BRIDGE_IP" ]; then
         log "ERROR" "BRIDGE_IP is empty in config file"
         log "ERROR" "Please run ./setup.sh to configure your Tedee Bridge"
@@ -56,16 +63,6 @@ load_config() {
         log "ERROR" "Please run ./setup.sh to configure retry settings"
         exit 1
     fi
-}
-
-# ===== LOGGING =====
-
-# Log message with timestamp and level (SLF4J style)
-# Parameters: $1 = level (INFO, WARN, ERROR, DEBUG), $2 = message
-log() {
-    LEVEL="$1"
-    MESSAGE="$2"
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$LEVEL] $MESSAGE"
 }
 
 # ===== TELEGRAM NOTIFICATIONS =====

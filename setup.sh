@@ -104,6 +104,7 @@ if [ "$RECONFIGURING" = true ]; then
     # Check if user wants to unset
     if [ "$NEW_TELEGRAM_TOKEN" = "none" ] || [ "$NEW_TELEGRAM_TOKEN" = "NONE" ]; then
         TELEGRAM_TOKEN=""
+        CHAT_ID=""
     elif [ -n "$NEW_TELEGRAM_TOKEN" ]; then
         TELEGRAM_TOKEN="$NEW_TELEGRAM_TOKEN"
     fi
@@ -178,8 +179,8 @@ TELEGRAM_TOKEN="$TELEGRAM_TOKEN"
 CHAT_ID="$CHAT_ID"
 
 # Retry Configuration
-MAX_RETRIES=$MAX_RETRIES
-SLEEP_BETWEEN=$SLEEP_BETWEEN
+MAX_RETRIES="$MAX_RETRIES"
+SLEEP_BETWEEN="$SLEEP_BETWEEN"
 EOF
 
 echo

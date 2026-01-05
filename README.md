@@ -113,7 +113,7 @@ update
 The project is structured to make it easy to add new scripts:
 
 1. Create a new script in `bin/`
-2. Source the common library: `. "$SCRIPT_DIR/../lib/tedee-common.sh"`
+2. Source the common library: `. "$SCRIPT_DIR/lib/tedee-common.sh"`
 3. Use shared functions like `load_config()`, `get_lock_state()`, etc.
 4. Make it executable: `chmod +x bin/your-script`
 

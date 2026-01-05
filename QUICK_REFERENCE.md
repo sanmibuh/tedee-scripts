@@ -148,7 +148,7 @@ chmod +x bin/*
 
 ## 💡 Tips
 
-1. **Test first**: Use `./bin/status` before locking/unlocking
+1. **Test first**: Run your scripts manually and verify behavior before locking/unlocking or adding cron jobs
 2. **Backup config**: Keep a backup of `config/tedee.conf`
 3. **Use PATH**: Add `bin/` to PATH for convenience
 4. **Telegram optional**: Works fine without Telegram notifications
