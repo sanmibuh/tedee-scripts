@@ -23,7 +23,7 @@ crontab -e
 # Close door every night at 10 PM
 0 22 * * * /path/to/tedee-scripts/bin/close
 
-# Close every weekday at 11 PM  
+# Close every weekday at 11 PM
 0 23 * * 1-5 /path/to/tedee-scripts/bin/close
 
 # Close on weekends at midnight
