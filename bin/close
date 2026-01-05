@@ -24,17 +24,17 @@ lock_door_with_retries() {
 
 # Wait for door to finish closing
 wait_for_lock() {
-    wait_for_state "6" "5" "INFO: La puerta se está cerrando..."
+    wait_for_state "6" "5" "La puerta se está cerrando..."
 }
 
 # Notify final state
 notify_final_state() {
     if wait_for_lock; then
-        send_telegram "ÉXITO: La puerta se ha cerrado correctamente."
-        echo "SUCCESS: Door closed successfully."
+        send_telegram "La puerta se ha cerrado correctamente."
+        log "INFO" "Door closed successfully."
     else
-        send_telegram "ERROR: La puerta NO se ha cerrado. Estado actual: $(get_lock_state)"
-        echo "ERROR: Door failed to close. Current state: $(get_lock_state)"
+        send_telegram "La puerta NO se ha cerrado. Estado actual: $(get_lock_state)"
+        log "ERROR" "Door failed to close. Current state: $(get_lock_state)"
         exit 1
     fi
 }
@@ -42,8 +42,8 @@ notify_final_state() {
 # Check if door is already closed
 check_door_closed() {
     if door_closed; then
-        send_telegram "INFO: La puerta ya estaba cerrada. No se necesita acción."
-        echo "INFO: Door is already closed. No action needed."
+        send_telegram "La puerta ya estaba cerrada."
+        log "INFO" "Door is already closed. No action needed."
         exit 0
     fi
 }
@@ -55,7 +55,7 @@ main() {
     require_bridge_online
     check_door_closed
 
-    echo "Closing door..."
+    log "INFO" "Closing door..."
     lock_door_with_retries
     notify_final_state
 }

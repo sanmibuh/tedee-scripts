@@ -5,6 +5,16 @@
 
 # ===== CONFIGURATION =====
 
+# ===== LOGGING =====
+
+# Log message with timestamp and level (SLF4J style)
+# Parameters: $1 = level (INFO, WARN, ERROR, DEBUG), $2 = message
+log() {
+    LEVEL="$1"
+    MESSAGE="$2"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$LEVEL] $MESSAGE"
+}
+
 # Load configuration file
 load_config() {
     SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -14,8 +24,8 @@ load_config() {
         # shellcheck source=/dev/null
         . "$CONFIG_FILE"
     else
-        echo "ERROR: Configuration file not found: $CONFIG_FILE"
-        echo "Please copy config/tedee.conf.template to config/tedee.conf and configure it."
+        log "ERROR" "Configuration file not found: $CONFIG_FILE"
+        log "ERROR" "Please copy config/tedee.conf.template to config/tedee.conf and configure it."
         exit 1
     fi
 
@@ -135,8 +145,8 @@ wait_for_state() {
 # Check if Bridge is online, exit if not
 require_bridge_online() {
     if ! bridge_online; then
-        send_telegram "ERROR: El Bridge Tedee no responde. Comprueba la conexión."
-        echo "ERROR: Tedee Bridge is not responding. Check the connection."
+        send_telegram "El Bridge Tedee no responde. Comprueba la conexión."
+        log "ERROR" "Tedee Bridge is not responding. Check the connection."
         exit 1
     fi
 }

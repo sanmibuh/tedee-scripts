@@ -3,14 +3,18 @@
 # Tedee Scripts - Update Script
 # Updates the repository to the latest version from origin/main
 
+# Load common functions for logging
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+. "$SCRIPT_DIR/lib/tedee-common.sh"
+
 # ===== FUNCTIONS =====
 
 fetch_latest_changes() {
-    echo "Fetching latest changes from origin..."
+    log "INFO" "Fetching latest changes from origin..."
     git fetch origin
 
     if [ $? -ne 0 ]; then
-        echo "Error: Failed to fetch from origin"
+        log "ERROR" "Failed to fetch from origin"
         return 1
     fi
 
@@ -18,11 +22,11 @@ fetch_latest_changes() {
 }
 
 checkout_main_branch() {
-    echo "Checking out origin/main..."
+    log "INFO" "Checking out origin/main..."
     git checkout -B main origin/main
 
     if [ $? -ne 0 ]; then
-        echo "Error: Failed to checkout origin/main"
+        log "ERROR" "Failed to checkout origin/main"
         return 1
     fi
 
@@ -31,16 +35,13 @@ checkout_main_branch() {
 
 # ===== MAIN =====
 
-# Get the repository root directory
-SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-
 cd "$SCRIPT_DIR" || exit 1
 
 fetch_latest_changes || exit 1
 
 checkout_main_branch || exit 1
 
-echo "Update completed successfully!"
-echo "Repository location: $SCRIPT_DIR"
+log "INFO" "Update completed successfully!"
+log "INFO" "Repository location: $SCRIPT_DIR"
 exit 0
 
