@@ -104,7 +104,7 @@ wait_for_closed() {
             return 0
         elif [ "$STATE" = "5" ] && [ "$IN_PROGRESS" = "0" ]; then
             IN_PROGRESS=1
-            send_telegram "La puerta se está cerrando..."
+            send_telegram "🔄 La puerta se está cerrando..."
         fi
         sleep $SLEEP_BETWEEN
         ELAPSED=$((ELAPSED + SLEEP_BETWEEN))
@@ -118,7 +118,7 @@ wait_for_closed() {
 # Check if Bridge is online, exit if not
 require_bridge_online() {
     if ! bridge_online; then
-        send_telegram "El Bridge Tedee no responde. Comprueba la conexión."
+        send_telegram "🔴 El Bridge Tedee no responde. Comprueba la conexión."
         log "ERROR" "Tedee Bridge is not responding. Check the connection."
         exit 1
     fi
