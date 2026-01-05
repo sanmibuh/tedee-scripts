@@ -5,16 +5,6 @@
 
 # ===== CONFIGURATION =====
 
-# ===== LOGGING =====
-
-# Log message with timestamp and level (SLF4J style)
-# Parameters: $1 = level (INFO, WARN, ERROR, DEBUG), $2 = message
-log() {
-    LEVEL="$1"
-    MESSAGE="$2"
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$LEVEL] $MESSAGE"
-}
-
 # Load configuration file
 load_config() {
     SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -35,6 +25,16 @@ load_config() {
     : "${DEVICE_ID:?DEVICE_ID not set in config}"
     : "${MAX_RETRIES:=3}"
     : "${SLEEP_BETWEEN:=5}"
+}
+
+# ===== LOGGING =====
+
+# Log message with timestamp and level (SLF4J style)
+# Parameters: $1 = level (INFO, WARN, ERROR, DEBUG), $2 = message
+log() {
+    LEVEL="$1"
+    MESSAGE="$2"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$LEVEL] $MESSAGE"
 }
 
 # ===== TELEGRAM NOTIFICATIONS =====
@@ -74,7 +74,7 @@ get_lock_state() {
          | grep -o '"state":[0-9]*' | cut -d':' -f2
 }
 
-# ===== LOCK STATE CHECKS =====
+# ===== LOCK OPERATIONS =====
 
 # Check if door is closed
 door_closed() {
@@ -82,31 +82,9 @@ door_closed() {
     [ "$STATE" = "6" ]
 }
 
-# Check if door is open
-door_open() {
-    STATE=$(get_lock_state)
-    [ "$STATE" = "2" ]
-}
-
-# Check if door is in transition (opening/closing)
-door_in_transition() {
-    STATE=$(get_lock_state)
-    [ "$STATE" = "4" ] || [ "$STATE" = "5" ]
-}
-
-# ===== LOCK OPERATIONS =====
-
 # Attempt to close the door
 attempt_lock() {
     HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" -X POST "http://${BRIDGE_IP}/v1.0/lock/${DEVICE_ID}/lock" \
-        -H 'accept: */*' \
-        -H "api_token: $(generate_api_key)" -d '' 2>&1)
-    echo "$HTTP_CODE"
-}
-
-# Attempt to open the door
-attempt_unlock() {
-    HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" -X POST "http://${BRIDGE_IP}/v1.0/lock/${DEVICE_ID}/unlock" \
         -H 'accept: */*' \
         -H "api_token: $(generate_api_key)" -d '' 2>&1)
     echo "$HTTP_CODE"
