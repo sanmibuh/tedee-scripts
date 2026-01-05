@@ -1,5 +1,6 @@
 # IDE
 .idea
 
-# Config
-tedee.conf
+# Config (user's personal configuration)
+config/tedee.conf
+

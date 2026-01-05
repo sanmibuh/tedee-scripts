@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Tedee Scripts - Update Script
+# Updates the repository to the latest version from origin/main
+
 # ===== FUNCTIONS =====
 
 fetch_latest_changes() {
@@ -28,7 +31,8 @@ checkout_main_branch() {
 
 # ===== MAIN =====
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# Get the repository root directory
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
 cd "$SCRIPT_DIR" || exit 1
 
@@ -37,5 +41,6 @@ fetch_latest_changes || exit 1
 checkout_main_branch || exit 1
 
 echo "Update completed successfully!"
+echo "Repository location: $SCRIPT_DIR"
 exit 0
 
