@@ -58,7 +58,7 @@ The main purpose of these scripts is automation via crontab. Examples:
 crontab -e
 
 # Auto-close door every night at 10 PM
-0 22 * * * /Users/yourusername/Projects/opensource/tedee-scripts/bin/close
+0 22 * * * /path/to/tedee-scripts/bin/close
 
 # Auto-close door every weekday at 11 PM
 0 23 * * 1-5 /path/to/tedee-scripts/bin/close

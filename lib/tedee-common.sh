@@ -21,9 +21,6 @@ load_config() {
     CONFIG_DIR="$SCRIPT_DIR/config"
     CONFIG_FILE="$CONFIG_DIR/tedee.conf"
 
-    # Ensure config directory exists
-    mkdir -p "$CONFIG_DIR"
-
     if [ -f "$CONFIG_FILE" ]; then
         # shellcheck source=/dev/null
         . "$CONFIG_FILE"

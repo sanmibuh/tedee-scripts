@@ -6,6 +6,9 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+CONFIG_DIR="$SCRIPT_DIR/config"
+mkdir -p "$CONFIG_DIR"
+
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
@@ -18,7 +21,7 @@ echo
 
 # Check if config exists and load current values
 RECONFIGURING=false
-if [ -f "$SCRIPT_DIR/config/tedee.conf" ]; then
+if [ -f "$CONFIG_DIR/tedee.conf" ]; then
     echo -e "${GREEN}✓${NC} Configuration found: config/tedee.conf"
     echo
     read -p "Do you want to reconfigure? (y/N): " RECONFIGURE
@@ -35,7 +38,7 @@ if [ -f "$SCRIPT_DIR/config/tedee.conf" ]; then
     # Load existing values for reconfiguration
     RECONFIGURING=true
     # shellcheck source=/dev/null
-    . "$SCRIPT_DIR/config/tedee.conf"
+    . "$CONFIG_DIR/tedee.conf"
 else
     echo -e "${YELLOW}!${NC} No configuration found"
     echo
@@ -68,7 +71,7 @@ done
 
 while true; do
     if [ "$RECONFIGURING" = true ]; then
-        read -p "Tedee API Token [current: ${TEDEE_TOKEN:0:10}...]: " NEW_TEDEE_TOKEN
+        read -p "Tedee API Token [current: $TEDEE_TOKEN]: " NEW_TEDEE_TOKEN
         TEDEE_TOKEN=${NEW_TEDEE_TOKEN:-$TEDEE_TOKEN}
     else
         read -p "Tedee API Token: " TEDEE_TOKEN
@@ -99,7 +102,7 @@ done
 echo
 if [ "$RECONFIGURING" = true ]; then
     echo "Telegram notifications (press Enter to keep current, type 'none' to disable):"
-    read -p "Telegram Bot Token [current: $([ -n "$TELEGRAM_TOKEN" ] && echo "${TELEGRAM_TOKEN:0:10}..." || echo "not set")]: " NEW_TELEGRAM_TOKEN
+    read -p "Telegram Bot Token [current: $([ -n "$TELEGRAM_TOKEN" ] && echo "$TELEGRAM_TOKEN" || echo "not set")]: " NEW_TELEGRAM_TOKEN
 
     # Check if user wants to unset
     if [ "$NEW_TELEGRAM_TOKEN" = "none" ] || [ "$NEW_TELEGRAM_TOKEN" = "NONE" ]; then
@@ -155,7 +158,7 @@ fi
 # Create config file directly
 echo "Creating configuration file..."
 
-cat > "$SCRIPT_DIR/config/tedee.conf" << EOF
+cat > "$CONFIG_DIR/tedee.conf" << EOF
 #!/bin/sh
 
 # Tedee Bridge Configuration
