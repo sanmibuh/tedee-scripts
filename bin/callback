@@ -1,0 +1,29 @@
+#!/bin/sh
+
+# Tedee Smart Lock - Callback Script
+# Receive Tedee events via the Bridge API
+
+# Load common functions
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+. "$SCRIPT_DIR/lib/tedee-common.sh"
+
+log "DEBUG" "===== WEBHOOK DUMP ====="
+log "DEBUG" "---- ARGUMENTS (argv) ----"
+i=0
+for arg in "$@"; do
+  log "DEBUG" "ARG[$i]: $arg"
+  i=$((i+1))
+done
+
+log "DEBUG" "---- ENVIRONMENT (HEADERS & METADATA) ----"
+# webhook expone headers como variables de entorno HTTP_*
+log "DEBUG" "$(env | sort)"
+
+log "DEBUG" "---- STDIN ----"
+if [ -t 0 ]; then
+  log "DEBUG" "(no stdin)"
+else
+  log "DEBUG" "$(cat)"
+fi
+
+log "DEBUG" "===== END ====="
