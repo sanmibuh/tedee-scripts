@@ -155,6 +155,37 @@ else
     SLEEP_BETWEEN=${SLEEP_BETWEEN:-5}
 fi
 
+echo
+if [ "$RECONFIGURING" = true ]; then
+    echo "Locale Configuration (press Enter to keep current):"
+    echo "Available locales: en (English), es (Spanish)"
+    while true; do
+        read -p "Locale [current: ${LOCALE:-en}]: " NEW_LOCALE
+        NEW_LOCALE=${NEW_LOCALE:-$LOCALE}
+        NEW_LOCALE=${NEW_LOCALE:-en}
+
+        if [ "$NEW_LOCALE" = "en" ] || [ "$NEW_LOCALE" = "es" ]; then
+            LOCALE="$NEW_LOCALE"
+            break
+        else
+            echo -e "${RED}✗${NC} Invalid locale! Available options: en, es"
+        fi
+    done
+else
+    echo "Locale Configuration (press Enter for default):"
+    echo "Available locales: en (English), es (Spanish)"
+    while true; do
+        read -p "Locale [default: en]: " LOCALE
+        LOCALE=${LOCALE:-en}
+
+        if [ "$LOCALE" = "en" ] || [ "$LOCALE" = "es" ]; then
+            break
+        else
+            echo -e "${RED}✗${NC} Invalid locale! Available options: en, es"
+        fi
+    done
+fi
+
 # Create config file directly
 echo "Creating configuration file..."
 
@@ -184,6 +215,10 @@ CHAT_ID="$CHAT_ID"
 # Retry Configuration
 MAX_RETRIES="$MAX_RETRIES"
 SLEEP_BETWEEN="$SLEEP_BETWEEN"
+
+# Locale Configuration
+# Available: en (English), es (Spanish)
+LOCALE="$LOCALE"
 EOF
 
 echo
