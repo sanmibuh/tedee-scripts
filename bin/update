@@ -38,7 +38,7 @@ download_latest_version() {
     TARBALL_URL="${REPO_URL}/archive/refs/heads/${BRANCH}.tar.gz"
     log "INFO" "Fetching from: $TARBALL_URL"
 
-    curl -L -f -o "$TEMP_DIR/repo.tar.gz" "$TARBALL_URL"
+    curl -L -f -s -S -o "$TEMP_DIR/repo.tar.gz" "$TARBALL_URL"
     if [ $? -ne 0 ]; then
         log "ERROR" "Failed to download repository"
         rm -rf "$TEMP_DIR"
