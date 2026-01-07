@@ -16,6 +16,10 @@ lock_door_with_retries() {
         HTTP_CODE=$(attempt_lock)
         if [ "$HTTP_CODE" = "204" ]; then
             break
+        elif [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "403" ]; then
+            # Auth failure - no point in retrying
+            log "ERROR" "Authentication failed. Exiting."
+            exit 1
         fi
         RETRIES=$((RETRIES+1))
         sleep $SLEEP_BETWEEN
