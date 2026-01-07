@@ -10,7 +10,7 @@
 log() {
     LEVEL="$1"
     MESSAGE="$2"
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$LEVEL] $MESSAGE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$LEVEL] $MESSAGE" >&2
 }
 
 # ===== CONFIGURATION =====
