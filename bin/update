@@ -1,35 +1,102 @@
 #!/bin/sh
 
 # Tedee Scripts - Update Script
-# Updates the repository to the latest version from origin/main
+# Updates the repository to the latest version from GitHub
+#
+# Usage: update [branch]
+#   branch: Optional branch name (default: main)
+#
+# Examples:
+#   update           # Update from main branch
+#   update develop   # Update from develop branch
 
 # Load common functions for logging
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 . "$SCRIPT_DIR/lib/tedee-common.sh"
 
+# Repository URL
+REPO_URL="https://github.com/sanmibuh/tedee-scripts"
+
+# Branch from parameter or default to main
+BRANCH="${1:-main}"
+
 # ===== FUNCTIONS =====
 
-fetch_latest_changes() {
-    log "INFO" "Fetching latest changes from origin..."
-    git fetch origin
+download_latest_version() {
+    log "INFO" "Downloading latest version from GitHub..."
+    log "INFO" "Repository: $REPO_URL"
+    log "INFO" "Branch: $BRANCH"
 
+    # Create temporary directory
+    TEMP_DIR=$(mktemp -d)
     if [ $? -ne 0 ]; then
-        log "ERROR" "Failed to fetch from origin"
+        log "ERROR" "Failed to create temporary directory"
         return 1
     fi
 
+    # Download tarball from GitHub
+    TARBALL_URL="${REPO_URL}/archive/refs/heads/${BRANCH}.tar.gz"
+    log "INFO" "Fetching from: $TARBALL_URL"
+
+    curl -L -f -o "$TEMP_DIR/repo.tar.gz" "$TARBALL_URL"
+    if [ $? -ne 0 ]; then
+        log "ERROR" "Failed to download repository"
+        rm -rf "$TEMP_DIR"
+        return 1
+    fi
+
+    log "INFO" "Download completed successfully"
+    echo "$TEMP_DIR"
     return 0
 }
 
-checkout_main_branch() {
-    log "INFO" "Checking out origin/main..."
-    git checkout -B main origin/main
+extract_and_update() {
+    TEMP_DIR="$1"
 
+    log "INFO" "Extracting files..."
+
+    # Extract tarball
+    tar -xzf "$TEMP_DIR/repo.tar.gz" -C "$TEMP_DIR"
     if [ $? -ne 0 ]; then
-        log "ERROR" "Failed to checkout origin/main"
+        log "ERROR" "Failed to extract archive"
+        rm -rf "$TEMP_DIR"
         return 1
     fi
 
+    # Find the extracted directory (GitHub creates a directory named repo-branch)
+    EXTRACTED_DIR=$(find "$TEMP_DIR" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+
+    if [ -z "$EXTRACTED_DIR" ] || [ ! -d "$EXTRACTED_DIR" ]; then
+        log "ERROR" "Could not find extracted directory"
+        rm -rf "$TEMP_DIR"
+        return 1
+    fi
+
+    log "INFO" "Updating files..."
+
+    # Preserve the config file if it exists
+    if [ -f "$SCRIPT_DIR/config/tedee.conf" ]; then
+        log "INFO" "Preserving existing configuration..."
+        cp "$SCRIPT_DIR/config/tedee.conf" "$TEMP_DIR/tedee.conf.backup"
+    fi
+
+    # Copy new files (excluding .git directory if present)
+    cp -R "$EXTRACTED_DIR/"* "$SCRIPT_DIR/"
+
+    # Restore the config file
+    if [ -f "$TEMP_DIR/tedee.conf.backup" ]; then
+        mv "$TEMP_DIR/tedee.conf.backup" "$SCRIPT_DIR/config/tedee.conf"
+        log "INFO" "Configuration restored"
+    fi
+
+    # Make scripts executable
+    chmod +x "$SCRIPT_DIR/bin/"* 2>/dev/null
+    chmod +x "$SCRIPT_DIR/setup.sh" 2>/dev/null
+
+    # Clean up
+    rm -rf "$TEMP_DIR"
+
+    log "INFO" "Update completed successfully!"
     return 0
 }
 
@@ -37,11 +104,11 @@ checkout_main_branch() {
 
 cd "$SCRIPT_DIR" || exit 1
 
-fetch_latest_changes || exit 1
+TEMP_DIR=$(download_latest_version) || exit 1
 
-checkout_main_branch || exit 1
+extract_and_update "$TEMP_DIR" || exit 1
 
-log "INFO" "Update completed successfully!"
 log "INFO" "Repository location: $SCRIPT_DIR"
+log "INFO" "All scripts are up to date!"
 exit 0
 

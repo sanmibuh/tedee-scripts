@@ -119,6 +119,21 @@ log show --predicate 'process == "cron"' --last 1h
 grep CRON /var/log/syslog
 ```
 
+### Update Scripts
+```bash
+# Update to latest version from main branch
+./bin/update
+
+# Update from a specific branch
+./bin/update develop
+
+# Schedule automatic updates (weekly on Sunday at 3 AM)
+crontab -e
+# Add: 0 3 * * 0 /path/to/tedee-scripts/bin/update >> /tmp/tedee-update.log 2>&1
+```
+
+**Note:** Update script uses `curl` and `tar` (no Git required). Perfect for Docker/minimal environments.
+
 ## 🐛 Troubleshooting
 
 ### "Bridge is not responding"
@@ -143,8 +158,8 @@ chmod +x bin/*
 
 ## 📚 Documentation
 
-- **README.md** - Full documentation
-- **QUICK_REFERENCE.md** - This file
+- **README.md** - Full documentation and getting started
+- **QUICK_REFERENCE.md** - This file (quick commands and tips)
 
 ## 💡 Tips
 
@@ -158,4 +173,3 @@ chmod +x bin/*
 
 - Tedee Bridge API Documentation: https://api.tedee.com/
 - Telegram Bot API: https://core.telegram.org/bots/api
-
