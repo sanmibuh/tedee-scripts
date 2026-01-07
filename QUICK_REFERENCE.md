@@ -58,6 +58,7 @@ Edit `config/tedee.conf`:
 | `CHAT_ID` | ❌ No | Telegram chat ID (for notifications) |
 | `MAX_RETRIES` | ✅ Yes | Number of retry attempts (default: 3) |
 | `SLEEP_BETWEEN` | ✅ Yes | Seconds between retries (default: 5) |
+| `LOCALE` | ✅ Yes | Language for notifications: `en` or `es` (default: en) |
 
 ## 🔐 Lock States
 
@@ -168,6 +169,7 @@ chmod +x bin/*
 3. **Use PATH**: Add `bin/` to PATH for convenience
 4. **Telegram optional**: Works fine without Telegram notifications
 5. **Check logs**: Add logging for automated tasks (cron)
+6. **Change language**: Run `./setup.sh` to switch between English and Spanish notifications
 
 ## 🔗 Useful Links
 

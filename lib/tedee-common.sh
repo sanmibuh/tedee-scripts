@@ -13,6 +13,32 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$LEVEL] $MESSAGE" >&2
 }
 
+# ===== LOCALIZATION =====
+
+# Load locale messages
+load_locale() {
+    # Default to English if not specified
+    LOCALE="${LOCALE:-en}"
+
+    # Validate locale
+    if [ "$LOCALE" != "en" ] && [ "$LOCALE" != "es" ]; then
+        log "WARN" "Invalid locale '$LOCALE', falling back to 'en'"
+        LOCALE="en"
+    fi
+
+    LOCALE_FILE="$SCRIPT_DIR/locales/${LOCALE}.sh"
+
+    if [ -f "$LOCALE_FILE" ]; then
+        # shellcheck source=/dev/null
+        . "$LOCALE_FILE"
+        log "DEBUG" "Loaded locale: $LOCALE"
+    else
+        log "WARN" "Locale file not found: $LOCALE_FILE, falling back to English"
+        # shellcheck source=/dev/null
+        . "$SCRIPT_DIR/locales/en.sh"
+    fi
+}
+
 # ===== CONFIGURATION =====
 
 # Load configuration file
@@ -60,13 +86,25 @@ load_config() {
         log "ERROR" "Please run ./setup.sh to configure retry settings"
         exit 1
     fi
+
+    # Load locale after config is loaded
+    load_locale
 }
 
 # ===== TELEGRAM NOTIFICATIONS =====
 
 # Send message to Telegram
+# Parameters: $1 = message template, $2... = optional parameters for printf
 send_telegram() {
-    MESSAGE="$1"
+    MESSAGE_TEMPLATE="$1"
+    shift  # Remove first argument, remaining are printf parameters
+
+    # Format message with printf if there are parameters
+    if [ $# -gt 0 ]; then
+        MESSAGE=$(printf "$MESSAGE_TEMPLATE" "$@")
+    else
+        MESSAGE="$MESSAGE_TEMPLATE"
+    fi
 
     # Only send if Telegram is configured
     if [ -n "$TELEGRAM_TOKEN" ] && [ -n "$CHAT_ID" ]; then
@@ -131,7 +169,7 @@ wait_for_closed() {
             return 0
         elif [ "$STATE" = "5" ] && [ "$IN_PROGRESS" = "0" ]; then
             IN_PROGRESS=1
-            send_telegram "🔄 La puerta se está cerrando..."
+            send_telegram "$MSG_DOOR_CLOSING"
         fi
         sleep $SLEEP_BETWEEN
         ELAPSED=$((ELAPSED + SLEEP_BETWEEN))
@@ -145,7 +183,7 @@ wait_for_closed() {
 # Check if Bridge is online, exit if not
 require_bridge_online() {
     if ! bridge_online; then
-        send_telegram "🔴 El Bridge Tedee no responde. Comprueba la conexión."
+        send_telegram "$MSG_BRIDGE_OFFLINE"
         log "ERROR" "Tedee Bridge is not responding. Check the connection."
         exit 1
     fi

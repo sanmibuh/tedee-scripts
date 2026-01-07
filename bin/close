@@ -25,11 +25,12 @@ lock_door_with_retries() {
 # Notify final state
 notify_final_state() {
     if wait_for_closed; then
-        send_telegram "🔐 La puerta se ha cerrado correctamente."
+        send_telegram "$MSG_DOOR_CLOSED"
         log "INFO" "Door closed successfully."
     else
-        send_telegram "❌ La puerta NO se ha cerrado. Estado actual: $(get_lock_state)"
-        log "ERROR" "Door failed to close. Current state: $(get_lock_state)"
+        STATE=$(get_lock_state)
+        send_telegram "$MSG_DOOR_FAILED" "$STATE"
+        log "ERROR" "Door failed to close. Current state: $STATE"
         exit 1
     fi
 }
@@ -37,7 +38,7 @@ notify_final_state() {
 # Check if door is already closed
 check_door_closed() {
     if door_closed; then
-        send_telegram "🚪 La puerta ya estaba cerrada."
+        send_telegram "$MSG_DOOR_ALREADY_CLOSED"
         log "INFO" "Door is already closed. No action needed."
         exit 0
     fi
