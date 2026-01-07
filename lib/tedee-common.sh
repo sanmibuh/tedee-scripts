@@ -140,7 +140,6 @@ bridge_online() {
 # - encrypted: SHA256(token + timestamp_ms) + timestamp_ms
 # - non-encrypted: returns the token as-is
 generate_api_key() {
-
     if [ "$AUTH_TYPE" = "encrypted" ]; then
         # Encrypted authentication: generate dynamic key
         TIMESTAMP_MS=$(($(date +%s) * 1000))
