@@ -169,10 +169,18 @@ door_closed() {
 }
 
 # Attempt to close the door
+# Returns: HTTP status code (204=success, 401/403=auth error, other=error)
 attempt_lock() {
     HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" -X POST "http://${BRIDGE_IP}/v1.0/lock/${DEVICE_ID}/lock" \
         -H 'accept: */*' \
         -H "api_token: $(generate_api_key)" -d '' 2>&1)
+
+    # Log auth failures
+    if [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "403" ]; then
+        log "ERROR" "Authentication failed (HTTP $HTTP_CODE). Check TEDEE_TOKEN and AUTH_TYPE in config."
+        send_telegram "$MSG_AUTH_FAILED"
+    fi
+
     echo "$HTTP_CODE"
 }
 
