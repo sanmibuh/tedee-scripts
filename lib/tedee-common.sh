@@ -69,6 +69,19 @@ load_config() {
         exit 1
     fi
 
+    # Validate AUTH_TYPE (related to TEDEE_TOKEN)
+    if [ -z "$AUTH_TYPE" ]; then
+        log "ERROR" "AUTH_TYPE is not set in config file"
+        log "ERROR" "Please run ./setup.sh to configure authentication type"
+        exit 1
+    fi
+
+    if [ "$AUTH_TYPE" != "encrypted" ] && [ "$AUTH_TYPE" != "non-encrypted" ]; then
+        log "ERROR" "Invalid AUTH_TYPE: $AUTH_TYPE (must be 'encrypted' or 'non-encrypted')"
+        log "ERROR" "Please run ./setup.sh to configure authentication type"
+        exit 1
+    fi
+
     if [ -z "$DEVICE_ID" ]; then
         log "ERROR" "DEVICE_ID is empty in config file"
         log "ERROR" "Please run ./setup.sh to configure your Tedee Device ID"
@@ -123,11 +136,20 @@ bridge_online() {
     ping -c 1 -W 2 "$BRIDGE_IP" >/dev/null 2>&1
 }
 
-# Generate dynamic encrypted api_token (SHA256(token + timestamp_ms) + timestamp_ms)
+# Generate api_key based on authentication type
+# - encrypted: SHA256(token + timestamp_ms) + timestamp_ms
+# - non-encrypted: returns the token as-is
 generate_api_key() {
-    TIMESTAMP_MS=$(($(date +%s) * 1000))
-    HASH=$(printf "%s%s" "$TEDEE_TOKEN" "$TIMESTAMP_MS" | sha256sum | awk '{print $1}')
-    echo "${HASH}${TIMESTAMP_MS}"
+
+    if [ "$AUTH_TYPE" = "encrypted" ]; then
+        # Encrypted authentication: generate dynamic key
+        TIMESTAMP_MS=$(($(date +%s) * 1000))
+        HASH=$(printf "%s%s" "$TEDEE_TOKEN" "$TIMESTAMP_MS" | sha256sum | awk '{print $1}')
+        echo "${HASH}${TIMESTAMP_MS}"
+    else
+        # Non-encrypted authentication: return token directly
+        echo "$TEDEE_TOKEN"
+    fi
 }
 
 # Get the current lock state

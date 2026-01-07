@@ -149,6 +149,17 @@ validate_locale() {
     fi
 }
 
+# Validation function for auth_type
+validate_auth_type() {
+    local value="$1"
+    if [ "$value" = "encrypted" ] || [ "$value" = "non-encrypted" ]; then
+        return 0
+    else
+        echo -e "${RED}✗${NC} Invalid authentication type! Available options: encrypted, non-encrypted"
+        return 1
+    fi
+}
+
 # Interactive configuration
 if [ "$RECONFIGURING" = true ]; then
     echo "Reconfiguring (press Enter to keep current value):"
@@ -161,6 +172,17 @@ echo
 # Mandatory configuration
 read_config_value "BRIDGE_IP" "Bridge IP address" "$BRIDGE_IP" "" true
 read_config_value "TEDEE_TOKEN" "Tedee API Token" "$TEDEE_TOKEN" "" true
+
+# Authentication Type configuration (related to TEDEE_TOKEN)
+echo
+if [ "$RECONFIGURING" = true ]; then
+    echo "Authentication Type (press Enter to keep current):"
+else
+    echo "Authentication Type (press Enter for default):"
+fi
+echo "Available types: encrypted, non-encrypted"
+read_config_with_validation "AUTH_TYPE" "Authentication Type" "${AUTH_TYPE:-encrypted}" "encrypted" validate_auth_type
+
 read_config_value "DEVICE_ID" "Device ID" "$DEVICE_ID" "" true
 
 # Optional Telegram configuration
@@ -227,6 +249,11 @@ BRIDGE_IP="$BRIDGE_IP"
 
 # API Token for Tedee Bridge authentication
 TEDEE_TOKEN="$TEDEE_TOKEN"
+
+# Authentication Type (how the token is used)
+# Options: encrypted, non-encrypted
+# Default: encrypted
+AUTH_TYPE="$AUTH_TYPE"
 
 # Device ID of your Tedee lock
 DEVICE_ID="$DEVICE_ID"

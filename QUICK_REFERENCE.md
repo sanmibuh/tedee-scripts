@@ -53,6 +53,7 @@ Edit `config/tedee.conf`:
 |----------|----------|-------------|
 | `BRIDGE_IP` | ✅ Yes | Tedee Bridge IP address |
 | `TEDEE_TOKEN` | ✅ Yes | Tedee API token |
+| `AUTH_TYPE` | ✅ Yes | Authentication type: `encrypted` or `non-encrypted` (default: encrypted) |
 | `DEVICE_ID` | ✅ Yes | Lock device ID |
 | `TELEGRAM_TOKEN` | ❌ No | Telegram bot token (for notifications) |
 | `CHAT_ID` | ❌ No | Telegram chat ID (for notifications) |
