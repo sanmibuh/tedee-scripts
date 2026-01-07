@@ -28,8 +28,9 @@ notify_final_state() {
         send_telegram "$MSG_DOOR_CLOSED"
         log "INFO" "Door closed successfully."
     else
-        send_telegram "$(printf "$MSG_DOOR_FAILED" "$(get_lock_state)")"
-        log "ERROR" "Door failed to close. Current state: $(get_lock_state)"
+        STATE=$(get_lock_state)
+        send_telegram "$MSG_DOOR_FAILED" "$STATE"
+        log "ERROR" "Door failed to close. Current state: $STATE"
         exit 1
     fi
 }

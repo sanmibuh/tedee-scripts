@@ -94,8 +94,17 @@ load_config() {
 # ===== TELEGRAM NOTIFICATIONS =====
 
 # Send message to Telegram
+# Parameters: $1 = message template, $2... = optional parameters for printf
 send_telegram() {
-    MESSAGE="$1"
+    MESSAGE_TEMPLATE="$1"
+    shift  # Remove first argument, remaining are printf parameters
+
+    # Format message with printf if there are parameters
+    if [ $# -gt 0 ]; then
+        MESSAGE=$(printf "$MESSAGE_TEMPLATE" "$@")
+    else
+        MESSAGE="$MESSAGE_TEMPLATE"
+    fi
 
     # Only send if Telegram is configured
     if [ -n "$TELEGRAM_TOKEN" ] && [ -n "$CHAT_ID" ]; then
