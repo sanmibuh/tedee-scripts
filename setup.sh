@@ -44,6 +44,111 @@ else
     echo
 fi
 
+# Helper function to read and validate a configuration value
+# Args: $1=var_name, $2=prompt_text, $3=current_value, $4=default_value, $5=is_required
+read_config_value() {
+    local var_name="$1"
+    local prompt_text="$2"
+    local current_value="$3"
+    local default_value="$4"
+    local is_required="$5"
+
+    local full_prompt
+    if [ "$RECONFIGURING" = true ]; then
+        if [ -n "$current_value" ]; then
+            full_prompt="$prompt_text [current: $current_value]: "
+        else
+            full_prompt="$prompt_text [current: not set]: "
+        fi
+    else
+        if [ -n "$default_value" ]; then
+            full_prompt="$prompt_text [default: $default_value]: "
+        else
+            full_prompt="$prompt_text: "
+        fi
+    fi
+
+    while true; do
+        read -p "$full_prompt" input_value
+
+        # Handle reconfiguration: keep current value if no input
+        if [ "$RECONFIGURING" = true ] && [ -z "$input_value" ]; then
+            input_value="$current_value"
+        fi
+
+        # Apply default if no input and not reconfiguring
+        if [ -z "$input_value" ] && [ -n "$default_value" ]; then
+            input_value="$default_value"
+        fi
+
+        # Validate if required
+        if [ "$is_required" = true ] && [ -z "$input_value" ]; then
+            echo -e "${RED}✗${NC} $prompt_text is required!"
+            continue
+        fi
+
+        # Set the value using indirect variable assignment
+        eval "$var_name=\"\$input_value\""
+        break
+    done
+}
+
+# Helper function to read and validate a value with custom validation
+# Args: $1=var_name, $2=prompt_text, $3=current_value, $4=default_value, $5=validation_function
+read_config_with_validation() {
+    local var_name="$1"
+    local prompt_text="$2"
+    local current_value="$3"
+    local default_value="$4"
+    local validation_func="$5"
+
+    local full_prompt
+    if [ "$RECONFIGURING" = true ]; then
+        if [ -n "$current_value" ]; then
+            full_prompt="$prompt_text [current: $current_value]: "
+        else
+            full_prompt="$prompt_text [current: ${default_value:-not set}]: "
+        fi
+    else
+        if [ -n "$default_value" ]; then
+            full_prompt="$prompt_text [default: $default_value]: "
+        else
+            full_prompt="$prompt_text: "
+        fi
+    fi
+
+    while true; do
+        read -p "$full_prompt" input_value
+
+        # Handle reconfiguration: keep current value if no input
+        if [ "$RECONFIGURING" = true ] && [ -z "$input_value" ]; then
+            input_value="$current_value"
+        fi
+
+        # Apply default if no input
+        if [ -z "$input_value" ] && [ -n "$default_value" ]; then
+            input_value="$default_value"
+        fi
+
+        # Run custom validation
+        if $validation_func "$input_value"; then
+            eval "$var_name=\"\$input_value\""
+            break
+        fi
+    done
+}
+
+# Validation function for locale
+validate_locale() {
+    local value="$1"
+    if [ "$value" = "en" ] || [ "$value" = "es" ]; then
+        return 0
+    else
+        echo -e "${RED}✗${NC} Invalid locale! Available options: en, es"
+        return 1
+    fi
+}
+
 # Interactive configuration
 if [ "$RECONFIGURING" = true ]; then
     echo "Reconfiguring (press Enter to keep current value):"
@@ -53,65 +158,27 @@ else
 fi
 echo
 
-# Loop until all mandatory fields are filled
-while true; do
-    if [ "$RECONFIGURING" = true ]; then
-        read -p "Bridge IP address [current: $BRIDGE_IP]: " NEW_BRIDGE_IP
-        BRIDGE_IP=${NEW_BRIDGE_IP:-$BRIDGE_IP}
-    else
-        read -p "Bridge IP address: " BRIDGE_IP
-    fi
+# Mandatory configuration
+read_config_value "BRIDGE_IP" "Bridge IP address" "$BRIDGE_IP" "" true
+read_config_value "TEDEE_TOKEN" "Tedee API Token" "$TEDEE_TOKEN" "" true
+read_config_value "DEVICE_ID" "Device ID" "$DEVICE_ID" "" true
 
-    if [ -z "$BRIDGE_IP" ]; then
-        echo -e "${RED}✗${NC} Bridge IP is required!"
-        continue
-    fi
-    break
-done
-
-while true; do
-    if [ "$RECONFIGURING" = true ]; then
-        read -p "Tedee API Token [current: $TEDEE_TOKEN]: " NEW_TEDEE_TOKEN
-        TEDEE_TOKEN=${NEW_TEDEE_TOKEN:-$TEDEE_TOKEN}
-    else
-        read -p "Tedee API Token: " TEDEE_TOKEN
-    fi
-
-    if [ -z "$TEDEE_TOKEN" ]; then
-        echo -e "${RED}✗${NC} Tedee API Token is required!"
-        continue
-    fi
-    break
-done
-
-while true; do
-    if [ "$RECONFIGURING" = true ]; then
-        read -p "Device ID [current: $DEVICE_ID]: " NEW_DEVICE_ID
-        DEVICE_ID=${NEW_DEVICE_ID:-$DEVICE_ID}
-    else
-        read -p "Device ID: " DEVICE_ID
-    fi
-
-    if [ -z "$DEVICE_ID" ]; then
-        echo -e "${RED}✗${NC} Device ID is required!"
-        continue
-    fi
-    break
-done
-
+# Optional Telegram configuration
 echo
 if [ "$RECONFIGURING" = true ]; then
     echo "Telegram notifications (press Enter to keep current, type 'none' to disable):"
-    read -p "Telegram Bot Token [current: $([ -n "$TELEGRAM_TOKEN" ] && echo "$TELEGRAM_TOKEN" || echo "not set")]: " NEW_TELEGRAM_TOKEN
+    display_token="not set"
+    [ -n "$TELEGRAM_TOKEN" ] && display_token="$TELEGRAM_TOKEN"
+    read -p "Telegram Bot Token [current: $display_token]: " input_token
 
     # Check if user wants to unset
-    if [ "$NEW_TELEGRAM_TOKEN" = "none" ] || [ "$NEW_TELEGRAM_TOKEN" = "NONE" ]; then
+    if [ "$input_token" = "none" ] || [ "$input_token" = "NONE" ]; then
         TELEGRAM_TOKEN=""
         CHAT_ID=""
-    elif [ -n "$NEW_TELEGRAM_TOKEN" ]; then
-        TELEGRAM_TOKEN="$NEW_TELEGRAM_TOKEN"
+    elif [ -n "$input_token" ]; then
+        TELEGRAM_TOKEN="$input_token"
     fi
-    # else keep current value (empty NEW_TELEGRAM_TOKEN)
+    # else keep current value (empty input_token)
 else
     echo "Optional - Telegram notifications (press Enter to skip):"
     read -p "Telegram Bot Token (optional): " TELEGRAM_TOKEN
@@ -119,72 +186,30 @@ fi
 
 # Only ask for Chat ID if Telegram Token was provided
 if [ -n "$TELEGRAM_TOKEN" ]; then
-    # If token is provided, Chat ID becomes mandatory
-    while true; do
-        if [ "$RECONFIGURING" = true ]; then
-            read -p "Telegram Chat ID [current: $CHAT_ID]: " NEW_CHAT_ID
-            CHAT_ID=${NEW_CHAT_ID:-$CHAT_ID}
-        else
-            read -p "Telegram Chat ID (required): " CHAT_ID
-        fi
-
-        if [ -z "$CHAT_ID" ]; then
-            echo -e "${RED}✗${NC} Chat ID is required when Telegram Token is set!"
-            continue
-        fi
-        break
-    done
+    read_config_value "CHAT_ID" "Telegram Chat ID (required)" "$CHAT_ID" "" true
 else
     CHAT_ID=""
 fi
 
+# Retry configuration
 echo
 if [ "$RECONFIGURING" = true ]; then
     echo "Retry Configuration (press Enter to keep current):"
-    read -p "Maximum retry attempts [current: $MAX_RETRIES - default: 3]: " NEW_MAX_RETRIES
-    MAX_RETRIES=${NEW_MAX_RETRIES:-$MAX_RETRIES}
-
-    read -p "Seconds between retries [current: $SLEEP_BETWEEN - default: 5]: " NEW_SLEEP_BETWEEN
-    SLEEP_BETWEEN=${NEW_SLEEP_BETWEEN:-$SLEEP_BETWEEN}
 else
     echo "Retry Configuration (press Enter for defaults):"
-    read -p "Maximum retry attempts [default: 3]: " MAX_RETRIES
-    MAX_RETRIES=${MAX_RETRIES:-3}
-
-    read -p "Seconds between retries [default: 5]: " SLEEP_BETWEEN
-    SLEEP_BETWEEN=${SLEEP_BETWEEN:-5}
 fi
+read_config_value "MAX_RETRIES" "Maximum retry attempts" "$MAX_RETRIES" "3" false
+read_config_value "SLEEP_BETWEEN" "Seconds between retries" "$SLEEP_BETWEEN" "5" false
 
+# Locale configuration
 echo
 if [ "$RECONFIGURING" = true ]; then
     echo "Locale Configuration (press Enter to keep current):"
-    echo "Available locales: en (English), es (Spanish)"
-    while true; do
-        read -p "Locale [current: ${LOCALE:-en}]: " NEW_LOCALE
-        NEW_LOCALE=${NEW_LOCALE:-$LOCALE}
-        NEW_LOCALE=${NEW_LOCALE:-en}
-
-        if [ "$NEW_LOCALE" = "en" ] || [ "$NEW_LOCALE" = "es" ]; then
-            LOCALE="$NEW_LOCALE"
-            break
-        else
-            echo -e "${RED}✗${NC} Invalid locale! Available options: en, es"
-        fi
-    done
 else
     echo "Locale Configuration (press Enter for default):"
-    echo "Available locales: en (English), es (Spanish)"
-    while true; do
-        read -p "Locale [default: en]: " LOCALE
-        LOCALE=${LOCALE:-en}
-
-        if [ "$LOCALE" = "en" ] || [ "$LOCALE" = "es" ]; then
-            break
-        else
-            echo -e "${RED}✗${NC} Invalid locale! Available options: en, es"
-        fi
-    done
 fi
+echo "Available locales: en (English), es (Spanish)"
+read_config_with_validation "LOCALE" "Locale" "${LOCALE:-en}" "en" validate_locale
 
 # Create config file directly
 echo "Creating configuration file..."

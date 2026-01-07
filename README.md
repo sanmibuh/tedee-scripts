@@ -41,20 +41,6 @@ The setup script will:
 
 To reconfigure later, simply run `./setup.sh` again.
 
-#### Language Configuration
-
-The scripts support multiple languages for Telegram notifications:
-- **English (en)** - Default
-- **Spanish (es)**
-
-During setup, you'll be prompted to choose your preferred locale. Available options are displayed, and only valid locales can be selected.
-
-You can change the language later by:
-1. Running `./setup.sh` again and selecting a new locale
-2. Manually editing `config/tedee.conf` and changing the `LOCALE` value
-
-To reconfigure later, simply run `./setup.sh` again.
-
 ### 2. Usage
 
 Close/lock the door:
