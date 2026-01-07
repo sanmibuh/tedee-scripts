@@ -120,13 +120,14 @@ services:
 
 ```bash
 # Start the container
-docker-compose up -d
+docker compose up -d
 
 # Check the logs
-docker-compose logs -f
+docker compose logs -f
 
 # Stop the container
-docker-compose down
+docker compose down
+# Note: On older setups, you may need to use `docker-compose` instead of `docker compose`.
 ```
 
 #### Access the Web Interface
