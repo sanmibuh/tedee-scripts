@@ -49,6 +49,13 @@ Update to the latest version:
 ./bin/update
 ```
 
+Update from a specific branch:
+```bash
+./bin/update develop
+```
+
+**Note:** The update script downloads the latest version from GitHub using `curl`.
+
 ### 3. Schedule with Crontab
 
 The main purpose of these scripts is automation via crontab. Examples:
@@ -86,10 +93,10 @@ update
 
 ## 📋 Requirements
 
-- `curl` - For API requests
+- `curl` - For API requests and downloading updates
 - `sha256sum` - For API token generation (or `shasum -a 256` on macOS)
 - `ping` - For bridge connectivity checks
-- `git` - For the update script
+- `tar` - For extracting updates (usually pre-installed)
 
 ## 🔧 Features
 
@@ -119,9 +126,9 @@ The project is structured to make it easy to add new scripts:
 
 ## 📝 Documentation
 
+- **README.md** - This file (full documentation)
 - **QUICK_REFERENCE.md** - Quick commands, troubleshooting, and tips
 
 ## 📝 License
 
 See LICENSE file for details.
-
