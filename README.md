@@ -76,7 +76,77 @@ crontab -e
 
 **Tip:** Use absolute paths in crontab for reliability.
 
-### 4. Optional: Add to PATH
+### 4. Alternative: Crontab UI with Docker
+
+For easier management of cron jobs through a web interface, you can use [crontab-ui](https://github.com/alseambusher/crontab-ui) with Docker Compose.
+
+#### Create docker-compose.yml
+
+Create a `docker-compose.yml` file in your preferred location:
+
+```yaml
+services:
+  crontab-ui:
+    image: alseambusher/crontab-ui:latest
+    container_name: crontab-ui
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Madrid  # Set your timezone
+      - BASIC_AUTH_USER=  # Set your username for web interface
+      - BASIC_AUTH_PWD=   # Set your password for web interface
+    ports:
+      - "8000:8000"
+    volumes:
+      - /path/to/tedee:/scripts/tedee  # Mount your tedee-scripts directory
+    
+    # Health check to ensure the service is running
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+```
+
+#### Configuration
+
+- **TZ**: Set your timezone (e.g., `Europe/Madrid`, `America/New_York`)
+- **BASIC_AUTH_USER**: Username for web interface authentication
+- **BASIC_AUTH_PWD**: Password for web interface authentication
+- **volumes**: Mount the tedee-scripts directory to `/scripts/tedee` in the container
+  - Replace `/path/to/tedee` with the absolute path to your tedee-scripts directory
+
+#### Start the Service
+
+```bash
+# Start the container
+docker compose up -d
+
+# Check the logs
+docker compose logs -f
+
+# Stop the container
+docker compose down
+# Note: On older setups, you may need to use `docker-compose` instead of `docker compose`.
+```
+
+#### Access the Web Interface
+
+Open your browser and navigate to: `http://localhost:8000`
+
+Login with the credentials you set in `BASIC_AUTH_USER` and `BASIC_AUTH_PWD`.
+
+#### Adding Cron Jobs via UI
+
+In the web interface, you can add cron jobs that run your tedee scripts:
+
+- **Expression**: `0 22 * * *` (10 PM every day)
+- **Command**: `/scripts/tedee/bin/close`
+- **Name**: Auto-close door at night
+
+The UI provides a visual cron expression builder and validation to make scheduling easier.
+
+### 5. Optional: Add to PATH
 
 To run scripts from anywhere, add the bin directory to your PATH:
 
