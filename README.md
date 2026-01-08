@@ -7,6 +7,7 @@ Shell scripts for controlling Tedee Smart Locks via the Tedee Bridge API.
 ```
 tedee-scripts/
 ├── bin/                    # Executable scripts
+│   ├── callback           # Webhook event handler
 │   ├── close              # Close/lock the door
 │   └── update             # Update repository
 ├── config/                 # Configuration files
@@ -18,6 +19,7 @@ tedee-scripts/
 │   └── es.sh              # Spanish messages
 ├── setup.sh               # Interactive setup
 ├── README.md
+├── QUICK_REFERENCE.md
 └── LICENSE
 ```
 
@@ -46,6 +48,11 @@ To reconfigure later, simply run `./setup.sh` again.
 Close/lock the door:
 ```bash
 ./bin/close
+```
+
+Handle webhook events (for Tedee Bridge API webhooks):
+```bash
+./bin/callback <event> <timestamp> <data>
 ```
 
 Update to the latest version:
@@ -156,7 +163,7 @@ To run scripts from anywhere, add the bin directory to your PATH:
 
 ```bash
 # Add to your ~/.zshrc or ~/.bashrc
-export PATH="$HOME/Projects/opensource/tedee-scripts/bin:$PATH"
+export PATH="path/to/tedee-scripts/bin:$PATH"
 ```
 
 Then you can run:
@@ -173,6 +180,29 @@ update
 - `tar` - For extracting updates (usually pre-installed)
 
 ## 🔧 Features
+
+### Callback Script (`bin/callback`)
+- Receives webhook events from Tedee Bridge API
+- Handles all event types from the [Tedee API documentation](https://github.com/tedee-com/tedee-documentation/blob/master/bridge-api/webhooks/events.md)
+- Sends Telegram notifications for each event
+
+#### Supported Events:
+- `backend-connection-changed` - Bridge connection to backend changes (connected/disconnected)
+- `device-connection-changed` - Device connection status to bridge changes (connected/disconnected)
+- `device-settings-changed` - Device settings are modified
+- `lock-status-changed` - Lock state changes (includes lock status, jammed status, and door state)
+- `device-battery-level-changed` - Battery level changes significantly
+- `device-battery-fully-charged` - Battery reaches 100%
+- `device-battery-start-charging` - Device starts charging
+- `device-battery-stop-charging` - Device stops charging
+
+For complete event documentation, see the [official Tedee webhook events documentation](https://github.com/tedee-com/tedee-documentation/blob/master/bridge-api/webhooks/events.md).
+
+#### Testing the Callback:
+```bash
+# Test with a sample event (ISO 8601 timestamp format)
+./bin/callback "lock-status-changed" "2023-07-25T14:41:48.825Z" '{"deviceId":289001,"state":6}'
+```
 
 ### Close Script (`bin/close`)
 - Checks bridge connectivity before attempting to close

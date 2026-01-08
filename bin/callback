@@ -2,28 +2,235 @@
 
 # Tedee Smart Lock - Callback Script
 # Receive Tedee events via the Bridge API
+# Usage: callback <event> <timestamp> <data>
 
 # Load common functions
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 . "$SCRIPT_DIR/lib/tedee-common.sh"
 
-log "DEBUG" "===== WEBHOOK DUMP ====="
-log "DEBUG" "---- ARGUMENTS (argv) ----"
-i=0
-for arg in "$@"; do
-  log "DEBUG" "ARG[$i]: $arg"
-  i=$((i+1))
-done
 
-log "DEBUG" "---- ENVIRONMENT (HEADERS & METADATA) ----"
-# webhook expone headers como variables de entorno HTTP_*
-log "DEBUG" "$(env | sort)"
+# ===== HELPER FUNCTIONS =====
 
-log "DEBUG" "---- STDIN ----"
-if [ -t 0 ]; then
-  log "DEBUG" "(no stdin)"
-else
-  log "DEBUG" "$(cat)"
-fi
+# Extract deviceId from JSON data
+get_device_id() {
+    echo "$DATA" | grep -o '"deviceId":[0-9]*' | cut -d':' -f2
+}
 
-log "DEBUG" "===== END ====="
+# Extract isConnected status from JSON data
+# Returns: 0 (disconnected) or 1 (connected)
+get_is_connected() {
+    echo "$DATA" | grep -o '"isConnected":[0-9]*' | cut -d':' -f2
+}
+
+# ===== EVENT HANDLERS =====
+
+# Handle backend-connection-changed event
+# Triggered when bridge connection to backend changes
+handle_backend_connection_changed() {
+    # Parse connection status from data (format: {"isConnected":0} or {"isConnected":1})
+    IS_CONNECTED=$(get_is_connected)
+
+    if [ "$IS_CONNECTED" = "1" ]; then
+        send_telegram "$MSG_BACKEND_CONNECTED"
+        log "INFO" "Backend connected"
+    else
+        send_telegram "$MSG_BACKEND_DISCONNECTED"
+        log "INFO" "Backend disconnected"
+    fi
+}
+
+# Handle device-connection-changed event
+# Triggered when device connection status changes
+handle_device_connection_changed() {
+    # Parse connection status and device ID from data (format: {"deviceType":2,"deviceId":33819,"serialNumber":"19420103-000006","isConnected":1})
+    IS_CONNECTED=$(get_is_connected)
+    DEVICE_ID=$(get_device_id)
+
+    if [ "$IS_CONNECTED" = "1" ]; then
+        send_telegram "$MSG_DEVICE_CONNECTED" "$DEVICE_ID"
+        log "INFO" "Device $DEVICE_ID connected"
+    else
+        send_telegram "$MSG_DEVICE_DISCONNECTED" "$DEVICE_ID"
+        log "INFO" "Device $DEVICE_ID disconnected"
+    fi
+}
+
+# Handle device-settings-changed event
+# Triggered when device settings are modified
+handle_device_settings_changed() {
+    # Parse device ID from data (format: {"deviceType":2,"deviceId":33819,"serialNumber":"19420103-000006"})
+    DEVICE_ID=$(get_device_id)
+
+    send_telegram "$MSG_DEVICE_SETTINGS_CHANGED" "$DEVICE_ID"
+    log "INFO" "Device $DEVICE_ID settings changed"
+}
+
+# Handle lock-status-changed event
+# Triggered when lock state changes (locked, unlocked, etc.)
+handle_lock_status_changed() {
+    # Parse data (format: {"deviceType":2,"deviceId":33819,"serialNumber":"19420103-000006","state":6,"jammed":0,"doorState":2})
+    DEVICE_ID=$(get_device_id)
+    STATE=$(echo "$DATA" | grep -o '"state":[0-9]*' | cut -d':' -f2)
+    JAMMED=$(echo "$DATA" | grep -o '"jammed":[0-9]*' | cut -d':' -f2)
+    DOOR_STATE=$(echo "$DATA" | grep -o '"doorState":[0-9]*' | cut -d':' -f2)
+
+    # Map lock state to message
+    case "$STATE" in
+        0) STATE_MSG="$MSG_LOCK_STATE_UNCALIBRATED" ;;
+        1) STATE_MSG="$MSG_LOCK_STATE_CALIBRATION" ;;
+        2) STATE_MSG="$MSG_LOCK_STATE_UNLOCKED" ;;
+        3) STATE_MSG="$MSG_LOCK_STATE_PARTIALLY_OPEN" ;;
+        4) STATE_MSG="$MSG_LOCK_STATE_UNLOCKING" ;;
+        5) STATE_MSG="$MSG_LOCK_STATE_LOCKING" ;;
+        6) STATE_MSG="$MSG_LOCK_STATE_LOCKED" ;;
+        7) STATE_MSG="$MSG_LOCK_STATE_PULL_SPRING" ;;
+        8) STATE_MSG="$MSG_LOCK_STATE_PULLING" ;;
+        9) STATE_MSG="$MSG_LOCK_STATE_UNKNOWN" ;;
+        255) STATE_MSG="$MSG_LOCK_STATE_UNPULLING" ;;
+        *) STATE_MSG="$MSG_LOCK_STATE_UNKNOWN ($STATE)" ;;
+    esac
+
+    # Map jammed status to message
+    case "$JAMMED" in
+        0) JAMMED_MSG="$MSG_LOCK_NOT_JAMMED" ;;
+        1) JAMMED_MSG="$MSG_LOCK_JAMMED" ;;
+        *) JAMMED_MSG="$MSG_LOCK_JAMMED_UNKNOWN" ;;
+    esac
+
+    # Map door state to message
+    case "$DOOR_STATE" in
+        0) DOOR_STATE_MSG="$MSG_DOOR_STATE_NOT_PAIRED" ;;
+        1) DOOR_STATE_MSG="$MSG_DOOR_STATE_DISCONNECTED" ;;
+        2) DOOR_STATE_MSG="$MSG_DOOR_STATE_OPENED" ;;
+        3) DOOR_STATE_MSG="$MSG_DOOR_STATE_CLOSED" ;;
+        4) DOOR_STATE_MSG="$MSG_DOOR_STATE_UNCALIBRATED" ;;
+        *) DOOR_STATE_MSG="$MSG_DOOR_STATE_UNKNOWN" ;;
+    esac
+
+    send_telegram "$MSG_LOCK_STATUS_CHANGED" "$DEVICE_ID" "$STATE_MSG" "$JAMMED_MSG" "$DOOR_STATE_MSG"
+    log "INFO" "Device $DEVICE_ID: Lock state=$STATE, Jammed=$JAMMED, DoorState=$DOOR_STATE"
+}
+
+# Handle device-battery-level-changed event
+# Triggered when battery level changes significantly
+handle_device_battery_level_changed() {
+    # Parse battery level and device ID from data (format: {"deviceType":2,"deviceId":33819,"serialNumber":"19420103-000006","batteryLevel":90})
+    DEVICE_ID=$(get_device_id)
+    BATTERY=$(echo "$DATA" | grep -o '"batteryLevel":[0-9]*' | cut -d':' -f2)
+
+    if [ -n "$BATTERY" ]; then
+        send_telegram "$MSG_BATTERY_LEVEL_CHANGED" "$DEVICE_ID" "$BATTERY"
+        log "INFO" "Device $DEVICE_ID: Battery level changed to $BATTERY%"
+    else
+        send_telegram "$MSG_BATTERY_LEVEL_CHANGED_UNKNOWN" "$DEVICE_ID"
+        log "INFO" "Device $DEVICE_ID: Battery level changed (unknown level)"
+    fi
+}
+
+# Handle device-battery-start-charging event
+# Triggered when device starts charging
+handle_device_battery_start_charging() {
+    # Parse device ID from data (format: {"deviceType":2,"deviceId":33819,"serialNumber":"19420103-000006"})
+    DEVICE_ID=$(get_device_id)
+
+    send_telegram "$MSG_BATTERY_START_CHARGING" "$DEVICE_ID"
+    log "INFO" "Device $DEVICE_ID: Battery start charging"
+}
+
+# Handle device-battery-stop-charging event
+# Triggered when device stops charging
+handle_device_battery_stop_charging() {
+    # Parse device ID from data (format: {"deviceType":2,"deviceId":33819,"serialNumber":"19420103-000006"})
+    DEVICE_ID=$(get_device_id)
+
+    send_telegram "$MSG_BATTERY_STOP_CHARGING" "$DEVICE_ID"
+    log "INFO" "Device $DEVICE_ID: Battery stop charging"
+}
+
+# Handle device-battery-fully-charged event
+# Triggered when battery reaches 100%
+handle_device_battery_fully_charged() {
+    # Parse device ID from data (format: {"deviceType":2,"deviceId":33819,"serialNumber":"19420103-000006"})
+    DEVICE_ID=$(get_device_id)
+
+    send_telegram "$MSG_BATTERY_FULLY_CHARGED" "$DEVICE_ID"
+    log "INFO" "Device $DEVICE_ID: Battery fully charged"
+}
+
+# Handle unknown events
+handle_unknown_event() {
+    send_telegram "$MSG_UNKNOWN_EVENT" "$EVENT" "$TIMESTAMP"
+    log "WARN" "Unknown event type: $EVENT"
+}
+
+# ===== INPUT VALIDATION =====
+
+# Validate input parameters
+validate_parameters() {
+    if [ $# -lt 3 ]; then
+        log "ERROR" "Invalid usage. Expected 3 parameters: <event> <timestamp> <data>"
+        log "ERROR" "Usage: callback <event> <timestamp> <data>"
+        exit 1
+    fi
+}
+
+# ===== EVENT ROUTING =====
+
+# Route event to appropriate handler
+route_event() {
+    case "$EVENT" in
+        "backend-connection-changed")
+            handle_backend_connection_changed
+            ;;
+        "device-connection-changed")
+            handle_device_connection_changed
+            ;;
+        "device-settings-changed")
+            handle_device_settings_changed
+            ;;
+        "lock-status-changed")
+            handle_lock_status_changed
+            ;;
+        "device-battery-level-changed")
+            handle_device_battery_level_changed
+            ;;
+        "device-battery-fully-charged")
+            handle_device_battery_fully_charged
+            ;;
+        "device-battery-start-charging")
+            handle_device_battery_start_charging
+            ;;
+        "device-battery-stop-charging")
+            handle_device_battery_stop_charging
+            ;;
+        *)
+            handle_unknown_event
+            ;;
+    esac
+}
+
+# ===== MAIN =====
+
+main() {
+    # Validate input parameters
+    validate_parameters "$@"
+
+    # Parse input parameters
+    EVENT="$1"
+    TIMESTAMP="$2"
+    DATA="$3"
+
+    # Load configuration and locale
+    load_config
+
+    log "INFO" "Received event: $EVENT at $TIMESTAMP with data: $DATA"
+
+    # Route to appropriate handler
+    route_event
+
+    log "INFO" "Callback completed successfully"
+}
+
+main "$@"
+
+
