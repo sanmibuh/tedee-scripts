@@ -172,6 +172,71 @@ close
 update
 ```
 
+## 🤖 Setting Up Telegram Notifications (Optional)
+
+To receive notifications about lock events via Telegram, you need to create a Telegram bot and obtain the necessary credentials.
+
+### 1. Create a Telegram Bot
+
+1. Open Telegram and search for **@BotFather** (the official bot for creating bots)
+2. Start a chat with BotFather and send the command: `/newbot`
+3. Follow the prompts:
+   - Choose a name for your bot (e.g., "My Tedee Lock Bot")
+   - Choose a username for your bot (must end in 'bot', e.g., "my_tedee_lock_bot")
+4. BotFather will respond with a message containing your **Bot Token**
+   - It looks like: `123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ`
+   - **Save this token** - you'll need it for configuration
+
+### 2. Get Your Chat ID
+
+To find your Chat ID (the ID of the chat where notifications will be sent):
+
+**Method 1: Using userinfobot**
+1. Search for **@userinfobot** in Telegram
+2. Start a chat and send any message
+3. The bot will reply with your user information, including your **Chat ID**
+   - It looks like: `123456789`
+
+**Method 2: Using your bot and the Telegram API**
+1. Send a message to your newly created bot (any message works)
+2. Open this URL in your browser (replace `YOUR_BOT_TOKEN` with your actual token):
+   ```
+   https://api.telegram.org/botYOUR_BOT_TOKEN/getUpdates
+   ```
+3. Look for the `"chat":{"id":` field in the JSON response
+   - Example: `"chat":{"id":123456789,...}`
+
+### 3. Configure in tedee-scripts
+
+Once you have your Bot Token and Chat ID:
+
+1. Run the setup script: `./setup.sh`
+2. When prompted for Telegram configuration:
+   - Enter your **Bot Token** when asked
+   - Enter your **Chat ID** when asked
+3. The setup will save these credentials to your config file
+
+Alternatively, you can manually add them to `config/tedee.conf`:
+```bash
+TELEGRAM_BOT_TOKEN="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+TELEGRAM_CHAT_ID="123456789"
+```
+
+### 4. Test Your Configuration
+
+Test that notifications work:
+```bash
+# The close script will send a Telegram notification if configured
+./bin/close
+
+# Or test with a webhook callback event
+./bin/callback "lock-status-changed" "2023-07-25T14:41:48.825Z" '{"deviceId":289001,"state":6}'
+```
+
+You should receive a notification in your Telegram chat!
+
+**Note:** Telegram notifications are optional. If not configured, the scripts will work normally without sending notifications.
+
 ## 📋 Requirements
 
 - `curl` - For API requests and downloading updates
