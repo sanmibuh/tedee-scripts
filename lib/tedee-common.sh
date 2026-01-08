@@ -141,8 +141,9 @@ bridge_online() {
 # - non-encrypted: returns the token as-is
 generate_api_key() {
     if [ "$AUTH_TYPE" = "encrypted" ]; then
-        # Encrypted authentication: generate dynamic key
-        TIMESTAMP_MS=$(($(date +%s) * 1000))
+        # Encrypted authentication: generate dynamic key with real millisecond precision
+        # Get current time in milliseconds (seconds + first three digits of nanoseconds)
+        TIMESTAMP_MS=$(date +%s%3N)
         HASH=$(printf "%s%s" "$TEDEE_TOKEN" "$TIMESTAMP_MS" | sha256sum | awk '{print $1}')
         echo "${HASH}${TIMESTAMP_MS}"
     else
