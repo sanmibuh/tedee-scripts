@@ -2,6 +2,64 @@
 
 Shell scripts for controlling Tedee Smart Locks via the Tedee Bridge API.
 
+Perfect for automating your lock with crontab or handling webhook events.
+
+## 📑 Table of Contents
+
+- [Quick Start](#-quick-start)
+- [Project Structure](#-project-structure)
+- [Usage](#-usage)
+- [Automation with Crontab](#-automation-with-crontab)
+- [Telegram Notifications (Optional)](#-telegram-notifications-optional)
+- [Configuration Reference](#-configuration-reference)
+- [Lock States Reference](#-lock-states-reference)
+- [Webhook Events](#-webhook-events)
+- [Troubleshooting](#-troubleshooting)
+- [Tips & Best Practices](#-tips--best-practices)
+- [Requirements](#-requirements)
+- [Development](#-development)
+- [License](#-license)
+
+## 🚀 Quick Start
+
+### 1. Run Setup
+
+The interactive setup script will guide you through all configuration:
+
+```bash
+./setup.sh
+```
+
+The setup script will:
+- Guide you through entering all required settings
+- Validate mandatory parameters (Bridge IP, API Token, Device ID)
+- Optionally configure Telegram notifications
+- Configure your preferred language (English or Spanish)
+- Create the configuration file automatically
+- Make all scripts executable
+
+To reconfigure later, simply run `./setup.sh` again.
+
+### 2. Test It
+
+Close/lock the door manually to verify everything works:
+
+```bash
+./bin/close
+```
+
+### 3. Automate It
+
+Add to crontab to automatically close the door at a specific time:
+
+```bash
+crontab -e
+# Close door every night at 10 PM
+0 22 * * * /path/to/tedee-scripts/bin/close
+```
+
+That's it! 🎉
+
 ## 📁 Project Structure
 
 ```
@@ -19,75 +77,100 @@ tedee-scripts/
 │   └── es.sh              # Spanish messages
 ├── setup.sh               # Interactive setup
 ├── README.md
-├── QUICK_REFERENCE.md
 └── LICENSE
 ```
 
-## 🚀 Quick Start
+## 💻 Usage
 
-### 1. Configuration
+### Close/Lock the Door
 
-Run the interactive setup script:
-
-```bash
-./setup.sh
-```
-
-The setup script will:
-- Guide you through entering all required settings
-- Validate mandatory parameters (Bridge IP, API Token, Device ID)
-- Optionally configure Telegram notifications
-- Configure your preferred language (English or Spanish)
-- Create the configuration file automatically
-- Make all scripts executable
-
-To reconfigure later, simply run `./setup.sh` again.
-
-### 2. Usage
-
-Close/lock the door:
 ```bash
 ./bin/close
 ```
 
-Handle webhook events (for Tedee Bridge API webhooks):
+The close script will:
+- Check bridge connectivity before attempting to close
+- Close/lock the door
+- Retry on failure (configurable)
+- Report lock status
+- Send Telegram notification (if configured)
+- Validate door state before and after closing
+
+### Handle Webhook Events
+
+For Tedee Bridge API webhooks:
+
 ```bash
 ./bin/callback <event> <timestamp> <data>
 ```
 
-Update to the latest version:
+Example:
 ```bash
-./bin/update
+./bin/callback "lock-status-changed" "2023-07-25T14:41:48.825Z" '{"deviceType":2,"deviceId":33819,"serialNumber":"19420103-000006","state":6,"jammed":0,"doorState":2}'
 ```
 
-Update from a specific branch:
+### Update Scripts
+
+Update to the latest version from GitHub:
+
 ```bash
+# Update from main branch
+./bin/update
+
+# Update from a specific branch
 ./bin/update develop
 ```
 
-**Note:** The update script downloads the latest version from GitHub using `curl`.
+**Note:** The update script uses `curl` and `tar` (no Git required). Perfect for Docker/minimal environments.
 
-### 3. Schedule with Crontab
+## ⏰ Automation with Crontab
 
-The main purpose of these scripts is automation via crontab. Examples:
+**This is the main use case for these scripts.** Schedule automatic door locking/closing at specific times.
+
+### Basic Examples
 
 ```bash
 # Edit your crontab
 crontab -e
 
-# Auto-close door every night at 10 PM
+# Close door every night at 10 PM
 0 22 * * * /path/to/tedee-scripts/bin/close
 
-# Auto-close door every weekday at 11 PM
+# Close every weekday at 11 PM
 0 23 * * 1-5 /path/to/tedee-scripts/bin/close
 
-# Auto-close on weekends at midnight
-0 0 * * 6,0 /path/to/tedee-scripts/bin/close >> /tmp/tedee-close.log 2>&1
+# Close on weekends at midnight
+0 0 * * 6,0 /path/to/tedee-scripts/bin/close
+
+# With logging
+0 22 * * * /path/to/tedee-scripts/bin/close >> /tmp/tedee-close.log 2>&1
 ```
 
-**Tip:** Use absolute paths in crontab for reliability.
+**Important:** Always use absolute paths in crontab!
 
-### 4. Alternative: Crontab UI with Docker
+### Testing Crontab
+
+```bash
+# Test manually first
+./bin/close
+
+# Check crontab logs (macOS)
+log show --predicate 'process == "cron"' --last 1h
+
+# Check system log (Linux)
+grep CRON /var/log/syslog
+```
+
+### Automatic Updates (Optional)
+
+Schedule automatic script updates:
+
+```bash
+# Update weekly on Sunday at 3 AM
+0 3 * * 0 /path/to/tedee-scripts/bin/update >> /tmp/tedee-update.log 2>&1
+```
+
+### Alternative: Crontab UI with Docker
 
 For easier management of cron jobs through a web interface, you can use [crontab-ui](https://github.com/alseambusher/crontab-ui) with Docker Compose.
 
@@ -125,7 +208,7 @@ services:
 - **BASIC_AUTH_USER**: Username for web interface authentication
 - **BASIC_AUTH_PWD**: Password for web interface authentication
 - **volumes**: Mount the tedee-scripts directory to `/scripts/tedee` in the container
-  - Replace `/path/to/tedee` with the absolute path to your tedee-scripts directory
+   - Replace `/path/to/tedee` with the absolute path to your tedee-scripts directory
 
 #### Start the Service
 
@@ -138,8 +221,9 @@ docker compose logs -f
 
 # Stop the container
 docker compose down
-# Note: On older setups, you may need to use `docker-compose` instead of `docker compose`.
 ```
+
+**Note:** On older setups, you may need to use `docker-compose` instead of `docker compose`.
 
 #### Access the Web Interface
 
@@ -157,22 +241,7 @@ In the web interface, you can add cron jobs that run your tedee scripts:
 
 The UI provides a visual cron expression builder and validation to make scheduling easier.
 
-### 5. Optional: Add to PATH
-
-To run scripts from anywhere, add the bin directory to your PATH:
-
-```bash
-# Add to your ~/.zshrc or ~/.bashrc
-export PATH="path/to/tedee-scripts/bin:$PATH"
-```
-
-Then you can run:
-```bash
-close
-update
-```
-
-## 🤖 Setting Up Telegram Notifications (Optional)
+## 🤖 Telegram Notifications (Optional)
 
 To receive notifications about lock events via Telegram, you need to create a Telegram bot and obtain the necessary credentials.
 
@@ -228,30 +297,68 @@ Test that notifications work:
 ```bash
 # The close script will send a Telegram notification if configured
 ./bin/close
-
-# Or test with a webhook callback event
-./bin/callback "lock-status-changed" "2023-07-25T14:41:48.825Z" '{"deviceId":289001,"state":6}'
 ```
 
 You should receive a notification in your Telegram chat!
 
 **Note:** Telegram notifications are optional. If not configured, the scripts will work normally without sending notifications.
 
-## 📋 Requirements
+## 🔧 Configuration Reference
 
-- `curl` - For API requests and downloading updates
-- `sha256sum` - For API token generation (or `shasum -a 256` on macOS)
-- `ping` - For bridge connectivity checks
-- `tar` - For extracting updates (usually pre-installed)
+Configuration is stored in `config/tedee.conf` (automatically created by `./setup.sh`).
 
-## 🔧 Features
+### Configuration Variables
 
-### Callback Script (`bin/callback`)
-- Receives webhook events from Tedee Bridge API
-- Handles all event types from the [Tedee API documentation](https://github.com/tedee-com/tedee-documentation/blob/master/bridge-api/webhooks/events.md)
-- Sends Telegram notifications for each event
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `BRIDGE_IP` | ✅ Yes | - | Tedee Bridge IP address |
+| `TEDEE_TOKEN` | ✅ Yes | - | Tedee API token |
+| `AUTH_TYPE` | ✅ Yes | `encrypted` | Authentication type: `encrypted` or `non-encrypted` |
+| `DEVICE_ID` | ✅ Yes | - | Lock device ID |
+| `TELEGRAM_BOT_TOKEN` | ❌ No | - | Telegram bot token (for notifications) |
+| `TELEGRAM_CHAT_ID` | ❌ No | - | Telegram chat ID (for notifications) |
+| `MAX_RETRIES` | ✅ Yes | `3` | Number of retry attempts |
+| `SLEEP_BETWEEN` | ✅ Yes | `5` | Seconds between retries |
+| `LOCALE` | ✅ Yes | `en` | Language for notifications: `en` or `es` |
 
-#### Supported Events:
+### Example Configuration
+
+```bash
+BRIDGE_IP="192.168.1.100"
+TEDEE_TOKEN="your-api-token-here"
+AUTH_TYPE="encrypted"
+DEVICE_ID="289001"
+TELEGRAM_BOT_TOKEN="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+TELEGRAM_CHAT_ID="123456789"
+MAX_RETRIES=3
+SLEEP_BETWEEN=5
+LOCALE="en"
+```
+
+## 🔐 Lock States Reference
+
+Understanding lock states helps with debugging and webhook event handling.
+
+| Code | State | Description |
+|------|-------|-------------|
+| 0 | Uncalibrated | Lock needs calibration |
+| 1 | Calibration | Lock is calibrating |
+| 2 | Open | 🔓 Door is open/unlocked |
+| 3 | Partially Open | Partially open |
+| 4 | Opening | 🔄 Currently opening |
+| 5 | Closing | 🔄 Currently closing |
+| 6 | Closed | 🔒 Door is closed/locked |
+| 7 | Pull Spring | Pull spring mode |
+| 8 | Pulling | Currently pulling |
+| 9 | Unknown | Unknown state |
+| 255 | Unpulling | Currently unpulling |
+
+## 📡 Webhook Events
+
+The callback script handles all event types from the Tedee Bridge API.
+
+### Supported Events
+
 - `backend-connection-changed` - Bridge connection to backend changes (connected/disconnected)
 - `device-connection-changed` - Device connection status to bridge changes (connected/disconnected)
 - `device-settings-changed` - Device settings are modified
@@ -261,44 +368,244 @@ You should receive a notification in your Telegram chat!
 - `device-battery-start-charging` - Device starts charging
 - `device-battery-stop-charging` - Device stops charging
 
-For complete event documentation, see the [official Tedee webhook events documentation](https://github.com/tedee-com/tedee-documentation/blob/master/bridge-api/webhooks/events.md).
+### Usage
 
-#### Testing the Callback:
 ```bash
-# Test with a sample event (ISO 8601 timestamp format)
+# Timestamp format: ISO 8601 (e.g., 2023-07-25T14:41:48.825Z)
 ./bin/callback "lock-status-changed" "2023-07-25T14:41:48.825Z" '{"deviceId":289001,"state":6}'
 ```
 
-### Close Script (`bin/close`)
-- Checks bridge connectivity before attempting to close
-- Retries on failure (configurable)
-- Reports lock status
-- Optional Telegram notifications
-- Validates door state before and after closing
-- Perfect for crontab automation
+### Documentation
 
-### Common Library (`lib/tedee-common.sh`)
-- Shared functions for all Tedee scripts
-- Bridge communication and API key generation
-- Lock state checking and waiting
-- Telegram notification support
-- Configuration validation
-- Internationalization (i18n) support with multiple locales
+For complete event documentation and payload structures, see the [official Tedee webhook events documentation](https://github.com/tedee-com/tedee-documentation/blob/master/bridge-api/webhooks/events.md).
+
+## 🐛 Troubleshooting
+
+### "Bridge is not responding"
+
+**Possible causes:**
+- Bridge is powered off
+- Bridge is not connected to the network
+- Wrong IP address in configuration
+
+**Solutions:**
+1. Check if bridge is powered on and connected
+2. Verify `BRIDGE_IP` in `config/tedee.conf`
+3. Test connectivity: `ping <BRIDGE_IP>`
+4. Check your router to confirm the bridge's IP address
+
+### "Configuration file not found"
+
+**Solution:**
+Run the setup script to create the configuration file:
+```bash
+./setup.sh
+```
+
+Or verify that `config/tedee.conf` exists in the correct location.
+
+### "Permission denied"
+
+**Solution:**
+Make scripts executable:
+```bash
+chmod +x bin/*
+chmod +x setup.sh
+```
+
+The setup script should do this automatically, but you can run it manually if needed.
+
+### Telegram notifications not working
+
+**Possible causes:**
+- Incorrect bot token
+- Incorrect chat ID
+- Bot hasn't been started (need to send `/start` to the bot first)
+
+**Solutions:**
+1. Verify `TELEGRAM_BOT_TOKEN` is correct in `config/tedee.conf`
+2. Verify `TELEGRAM_CHAT_ID` is correct
+3. Send `/start` to your bot in Telegram
+4. Test with a simple curl command:
+   ```bash
+   curl -X POST "https://api.telegram.org/bot<YOUR_BOT_TOKEN>/sendMessage" \
+        -d "chat_id=<YOUR_CHAT_ID>" \
+        -d "text=Test message"
+   ```
+
+**Note:** Telegram notifications are optional - scripts work fine without them.
+
+### Crontab job not running
+
+**Possible causes:**
+- Using relative paths instead of absolute paths
+- Scripts not executable
+- Environment variables not set in cron context
+
+**Solutions:**
+1. Always use absolute paths in crontab:
+   ```bash
+   # Good
+   0 22 * * * /home/user/tedee-scripts/bin/close
+   
+   # Bad
+   0 22 * * * ~/tedee-scripts/bin/close
+   0 22 * * * close
+   ```
+
+2. Add logging to debug:
+   ```bash
+   0 22 * * * /path/to/tedee-scripts/bin/close >> /tmp/tedee.log 2>&1
+   ```
+
+3. Check cron logs:
+   ```bash
+   # macOS
+   log show --predicate 'process == "cron"' --last 1h
+   
+   # Linux
+   grep CRON /var/log/syslog
+   ```
+
+### Lock state not updating
+
+**Solution:**
+The close script waits for the lock to reach the closed state. If it times out:
+1. Check if the lock is physically working (battery, calibration)
+2. Increase retry attempts in `config/tedee.conf`:
+   ```bash
+   MAX_RETRIES=5
+   SLEEP_BETWEEN=10
+   ```
+3. Check lock state manually via Tedee app
+
+## 💡 Tips & Best Practices
+
+### 1. Test Before Automating
+Always run scripts manually first to verify behavior before adding to crontab:
+```bash
+./bin/close
+# Verify it worked, then add to crontab
+```
+
+### 2. Backup Your Configuration
+Keep a backup of your `config/tedee.conf`:
+```bash
+cp config/tedee.conf config/tedee.conf.backup
+```
+
+### 3. Use Logging for Cron Jobs
+Always add logging when running from crontab:
+```bash
+0 22 * * * /path/to/tedee-scripts/bin/close >> /tmp/tedee.log 2>&1
+```
+
+This helps with debugging if something goes wrong.
+
+### 4. Use Absolute Paths
+Always use absolute paths in crontab to avoid issues:
+```bash
+# Good
+0 22 * * * /home/user/tedee-scripts/bin/close
+
+# Also good (if added to PATH)
+0 22 * * * close
+```
+
+### 5. Telegram is Optional
+Don't worry if you don't need notifications - the scripts work perfectly without Telegram.
+
+### 6. Change Language Anytime
+Run `./setup.sh` again to switch between English and Spanish notifications.
+
+### 7. Update Regularly
+Keep your scripts up to date:
+```bash
+./bin/update
+```
+
+Or automate it:
+```bash
+# Update weekly on Sunday at 3 AM
+0 3 * * 0 /path/to/tedee-scripts/bin/update
+```
+
+### 8. Monitor Bridge Connectivity
+The close script checks bridge connectivity before each operation, but you can also:
+```bash
+# Add this to crontab to get notified if bridge is down
+*/30 * * * * ping -c 1 <BRIDGE_IP> || echo "Bridge is down" | mail -s "Tedee Alert" your@email.com
+```
+
+## 📋 Requirements
+
+- `curl` - For API requests and downloading updates
+- `sha256sum` - For API token generation (or `shasum -a 256` on macOS)
+- `ping` - For bridge connectivity checks
+- `tar` - For extracting updates (usually pre-installed)
+
+All these tools are typically pre-installed on macOS and Linux systems.
 
 ## 🛠️ Development
 
-The project is structured to make it easy to add new scripts:
+The project is structured to make it easy to add new scripts.
 
-1. Create a new script in `bin/`
-2. Source the common library: `. "$SCRIPT_DIR/lib/tedee-common.sh"`
-3. Use shared functions like `load_config()`, `get_lock_state()`, etc.
-4. Make it executable: `chmod +x bin/your-script`
+### Project Architecture
 
-## 📝 Documentation
+- **bin/** - Executable scripts that users run directly
+- **lib/** - Shared library functions (API communication, state checking, notifications)
+- **locales/** - Internationalization support (en, es)
+- **config/** - User configuration (generated, not in git)
 
-- **README.md** - This file (full documentation)
-- **QUICK_REFERENCE.md** - Quick commands, troubleshooting, and tips
+### Adding a New Script
+
+1. Create a new script in `bin/`:
+   ```bash
+   touch bin/my-script
+   chmod +x bin/my-script
+   ```
+
+2. Source the common library:
+   ```bash
+   #!/bin/bash
+   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+   . "$SCRIPT_DIR/../lib/tedee-common.sh"
+   ```
+
+3. Use shared functions:
+   ```bash
+   load_config
+   get_lock_state "$DEVICE_ID"
+   send_telegram_notification "Your message"
+   ```
+
+4. Test it:
+   ```bash
+   ./bin/my-script
+   ```
+
+### Shared Functions Available
+
+The `lib/tedee-common.sh` library provides:
+
+- `load_config()` - Load and validate configuration
+- `get_lock_state()` - Get current lock state
+- `wait_for_state()` - Wait for lock to reach a specific state
+- `close_lock()` - Close/lock the door
+- `send_telegram_notification()` - Send Telegram message
+- `generate_api_key()` - Generate API authentication key
+- `check_bridge_connectivity()` - Test bridge connection
+
+See `lib/tedee-common.sh` for complete function list and documentation.
+
+## 🔗 Useful Links
+
+- [Tedee Bridge API Documentation](https://api.tedee.com/)
+- [Tedee Webhook Events Documentation](https://github.com/tedee-com/tedee-documentation/blob/master/bridge-api/webhooks/events.md)
+- [Telegram Bot API](https://core.telegram.org/bots/api)
+- [Crontab Guru](https://crontab.guru/) - Cron expression generator and explainer
 
 ## 📝 License
 
 See LICENSE file for details.
+
