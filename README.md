@@ -287,8 +287,8 @@ Once you have your Bot Token and Chat ID:
 
 Alternatively, you can manually add them to `config/tedee.conf`:
 ```bash
-TELEGRAM_BOT_TOKEN="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
-TELEGRAM_CHAT_ID="123456789"
+TELEGRAM_TOKEN="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+CHAT_ID="123456789"
 ```
 
 ### 4. Test Your Configuration
@@ -315,8 +315,8 @@ Configuration is stored in `config/tedee.conf` (automatically created by `./setu
 | `TEDEE_TOKEN` | ✅ Yes | - | Tedee API token |
 | `AUTH_TYPE` | ✅ Yes | `encrypted` | Authentication type: `encrypted` or `non-encrypted` |
 | `DEVICE_ID` | ✅ Yes | - | Lock device ID |
-| `TELEGRAM_BOT_TOKEN` | ❌ No | - | Telegram bot token (for notifications) |
-| `TELEGRAM_CHAT_ID` | ❌ No | - | Telegram chat ID (for notifications) |
+| `TELEGRAM_TOKEN` | ❌ No | - | Telegram bot token (for notifications) |
+| `CHAT_ID` | ❌ No | - | Telegram chat ID (for notifications) |
 | `MAX_RETRIES` | ✅ Yes | `3` | Number of retry attempts |
 | `SLEEP_BETWEEN` | ✅ Yes | `5` | Seconds between retries |
 | `LOCALE` | ✅ Yes | `en` | Language for notifications: `en` or `es` |
@@ -328,8 +328,8 @@ BRIDGE_IP="192.168.1.100"
 TEDEE_TOKEN="your-api-token-here"
 AUTH_TYPE="encrypted"
 DEVICE_ID="289001"
-TELEGRAM_BOT_TOKEN="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
-TELEGRAM_CHAT_ID="123456789"
+TELEGRAM_TOKEN="123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ"
+CHAT_ID="123456789"
 MAX_RETRIES=3
 SLEEP_BETWEEN=5
 LOCALE="en"
@@ -575,7 +575,7 @@ This is useful for:
 **Solutions:**
 1. Verify Telegram is configured in `config/tedee.conf`:
    ```bash
-   grep TELEGRAM config/tedee.conf
+   grep 'TELEGRAM_TOKEN|CHAT_ID' config/tedee.conf
    ```
 
 2. Test Telegram notifications work:
@@ -650,8 +650,8 @@ The setup script should do this automatically, but you can run it manually if ne
 - Bot hasn't been started (need to send `/start` to the bot first)
 
 **Solutions:**
-1. Verify `TELEGRAM_BOT_TOKEN` is correct in `config/tedee.conf`
-2. Verify `TELEGRAM_CHAT_ID` is correct
+1. Verify `TELEGRAM_TOKEN` is correct in `config/tedee.conf`
+2. Verify `CHAT_ID` is correct
 3. Send `/start` to your bot in Telegram
 4. Test with a simple curl command:
    ```bash
