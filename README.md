@@ -355,9 +355,148 @@ Understanding lock states helps with debugging and webhook event handling.
 
 ## 📡 Webhook Events
 
-The callback script handles all event types from the Tedee Bridge API.
+The callback script handles all event types from the Tedee Bridge API and sends Telegram notifications for lock events.
+
+**Note:** Webhook setup requires Telegram notifications to be configured. The callback script sends notifications about lock events, so it makes no sense to set up webhooks if you haven't configured Telegram notifications first. See [Telegram Notifications](#-telegram-notifications-optional) section.
+
+### Requirements
+
+To receive webhook events from your Tedee Bridge, you need:
+
+1. **A server that can receive POST HTTP requests** - This can be any server accessible from your local network
+2. **A webhook handler** - A service that receives HTTP requests and executes the callback script
+3. **Telegram notifications configured** - The callback script sends notifications via Telegram
+
+### Setup with Docker (Recommended)
+
+The easiest way to set up a webhook server is using [TheCatLady/docker-webhook](https://github.com/TheCatLady/docker-webhook) with Docker Compose.
+
+#### 1. Create docker-compose.yml
+
+Create a `docker-compose.yml` file in your preferred location:
+
+```yaml
+services:
+  webhook:
+    image: thecatlady/webhook:latest
+    container_name: webhook
+    command: -verbose -hooks=/config/hooks.yml -hotreload
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Madrid  # Set your timezone
+    ports:
+      - "9000:9000"
+    volumes:
+      - /path/to/webhook/config:/config
+      # Mount your tedee-scripts directory
+      - /path/to/tedee-scripts:/scripts/tedee
+```
+
+**Configuration:**
+- **TZ**: Set your timezone (e.g., `Europe/Madrid`, `America/New_York`)
+- **ports**: Exposes webhook server on port 9000 (change if needed)
+- **volumes**: 
+  - Mount a config directory for `hooks.yml`
+  - Mount your tedee-scripts directory to `/scripts/tedee`
+
+#### 2. Create hooks.yml
+
+Create a `hooks.yml` file in your webhook config directory:
+
+```yaml
+- id: tedee/callback
+  execute-command: /scripts/tedee/bin/callback
+  command-working-directory: /scripts/tedee
+  pass-arguments-to-command:
+    - source: payload
+      name: event
+    - source: payload
+      name: timestamp
+    - source: payload
+      name: data
+```
+
+This configuration:
+- Creates a webhook endpoint at `/hooks/tedee/callback`
+- Executes the callback script when triggered
+- Passes event data from the payload to the script
+
+#### 3. Start the Webhook Server
+
+```bash
+# Start the container
+docker compose up -d
+
+# Check the logs to verify it's running
+docker compose logs -f webhook
+
+# You should see something like:
+# [webhook] 2024/01/08 10:00:00 [webhook] version 2.x.x starting
+# [webhook] 2024/01/08 10:00:00 [webhook] serving hooks on http://0.0.0.0:9000/hooks/{id}
+```
+
+**Note:** On older setups, you may need to use `docker-compose` instead of `docker compose`.
+
+### Register Callback with Tedee Bridge
+
+Once your webhook server is running, you need to register it with your Tedee Bridge.
+
+#### 1. Access Bridge Swagger UI
+
+The Tedee Bridge provides a Swagger UI for API operations:
+
+```
+http://your-bridge-local-ip
+```
+
+Example: `http://192.168.1.100`
+
+#### 2. Authenticate
+
+1. Open the Swagger UI in your browser
+2. Look for the authentication section
+3. Enter your API token (from `config/tedee.conf` -> `TEDEE_TOKEN`)
+
+**Note:** If you have encryption enabled, you may need to temporarily disable it for easier Swagger UI access. After registering the callback, it's recommended to re-enable token encryption for security.
+
+#### 3. Register the Callback
+
+1. Find the `POST /callback` endpoint in the Swagger UI
+2. Click "Try it out"
+3. Use this request body:
+
+```json
+{
+  "url": "http://your-webhook-server-ip:9000/hooks/tedee/callback",
+  "method": "POST"
+}
+```
+
+Example:
+```json
+{
+  "url": "http://192.168.1.50:9000/hooks/tedee/callback",
+  "method": "POST"
+}
+```
+
+4. Click "Execute"
+5. Verify the response is successful (200 OK)
+
+**Important:** Make sure to use the correct IP address of the machine running your webhook server, not localhost or 127.0.0.1.
+
+#### 4. Verify Registration
+
+After registering, test that webhooks are working:
+
+1. Perform an action on your lock (open/close via app)
+2. Check webhook server logs: `docker compose logs -f webhook`
+3. You should see incoming POST requests
+4. Check that you receive Telegram notifications
 
 ### Supported Events
+
+The callback script handles all event types from the Tedee Bridge API:
 
 - `backend-connection-changed` - Bridge connection to backend changes (connected/disconnected)
 - `device-connection-changed` - Device connection status to bridge changes (connected/disconnected)
@@ -368,12 +507,100 @@ The callback script handles all event types from the Tedee Bridge API.
 - `device-battery-start-charging` - Device starts charging
 - `device-battery-stop-charging` - Device stops charging
 
-### Usage
+### Manual Testing
+
+You can test the callback script manually without webhooks:
 
 ```bash
 # Timestamp format: ISO 8601 (e.g., 2023-07-25T14:41:48.825Z)
 ./bin/callback "lock-status-changed" "2023-07-25T14:41:48.825Z" '{"deviceId":289001,"state":6}'
 ```
+
+This is useful for:
+- Testing your Telegram notification setup
+- Debugging callback script behavior
+- Understanding event data structures
+
+### Troubleshooting Webhooks
+
+#### Webhook not receiving events
+
+**Solutions:**
+1. Verify webhook server is running:
+   ```bash
+   docker compose ps
+   docker compose logs webhook
+   ```
+
+2. Test webhook endpoint manually:
+   ```bash
+   curl -X POST http://your-webhook-server-ip:9000/hooks/tedee/callback \
+        -H "Content-Type: application/json" \
+        -d '{"event":"test","timestamp":"2024-01-08T10:00:00Z","data":"{}"}'
+   ```
+
+3. Check that callback is registered in Bridge Swagger UI (GET /callback endpoint)
+
+4. Verify network connectivity between Bridge and webhook server:
+   ```bash
+   # From the machine running the bridge
+   ping your-webhook-server-ip
+   ```
+
+#### Callback script not executing
+
+**Solutions:**
+1. Check webhook logs for errors:
+   ```bash
+   docker compose logs -f webhook
+   ```
+
+2. Verify script permissions inside container:
+   ```bash
+   docker compose exec webhook ls -la /scripts/tedee/bin/callback
+   ```
+
+3. Verify tedee-scripts directory is mounted correctly:
+   ```bash
+   docker compose exec webhook ls -la /scripts/tedee/
+   ```
+
+4. Test callback script manually from host:
+   ```bash
+   ./bin/callback "test" "2024-01-08T10:00:00Z" "{}"
+   ```
+
+#### No Telegram notifications
+
+**Solutions:**
+1. Verify Telegram is configured in `config/tedee.conf`:
+   ```bash
+   grep TELEGRAM config/tedee.conf
+   ```
+
+2. Test Telegram notifications work:
+   ```bash
+   ./bin/close  # Should send a notification
+   ```
+
+3. Check callback script has access to config:
+   ```bash
+   docker compose exec webhook cat /scripts/tedee/config/tedee.conf
+   ```
+
+### Alternative Setup (Without Docker)
+
+If you prefer not to use Docker, you can set up webhooks using:
+
+- **webhook** binary directly: https://github.com/adnanh/webhook
+- **nginx** + CGI script
+- **Node.js** express server
+- Any HTTP server that can execute shell scripts on POST requests
+
+The key requirement is that your server must:
+1. Accept POST requests at a specific endpoint
+2. Extract `event`, `timestamp`, and `data` from the request payload
+3. Execute: `/path/to/tedee-scripts/bin/callback "$event" "$timestamp" "$data"`
 
 ### Documentation
 
