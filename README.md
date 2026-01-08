@@ -53,6 +53,7 @@ Close/lock the door:
 Handle webhook events (for Tedee Bridge API webhooks):
 ```bash
 ./bin/callback <event> <timestamp> <data>
+```
 
 Update to the latest version:
 ```bash
