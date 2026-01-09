@@ -4,52 +4,41 @@
 
 # Telegram messages
 MSG_BRIDGE_OFFLINE="🔴 The Tedee Bridge is not responding. Check the connection."
-MSG_DOOR_CLOSING="🔄 The door is closing..."
-MSG_DOOR_CLOSED="🔐 The door has been closed successfully."
-MSG_DOOR_FAILED="❌ The door has NOT been closed. Current state: %s"
-MSG_DOOR_ALREADY_CLOSED="🚪 The door was already closed."
+MSG_LOCK_FAILED="❌ The lock has NOT been closed. Current state: %s"
+MSG_LOCK_ALREADY_CLOSED="🚪 The lock was already closed."
 MSG_AUTH_FAILED="🔑❌ Authentication failed. Check your TEDEE_TOKEN and AUTH_TYPE in config/tedee.conf"
+MSG_SCRIPTS_UPDATED="📥 Tedee Scripts Updated\n\nScripts have been successfully updated to the latest version from branch: %s"
 
 # Callback event messages
 MSG_BACKEND_CONNECTED="🌐 Bridge connected to backend"
 MSG_BACKEND_DISCONNECTED="🌐❌ Bridge disconnected from backend"
-MSG_DEVICE_CONNECTED="🟢 Device %s connected to the bridge"
-MSG_DEVICE_DISCONNECTED="🔴 Device %s disconnected from the bridge"
-MSG_DEVICE_SETTINGS_CHANGED="⚙️ Device %s settings have been changed"
-MSG_LOCK_STATUS_CHANGED="🔄 Device %s status has changed:
-- Lock: %s
-- Jam: %s
-- Door: %s"
-MSG_BATTERY_LEVEL_CHANGED="🔋 Device %s battery level changed to %s%%"
-MSG_BATTERY_LEVEL_CHANGED_UNKNOWN="🔋 Device %s battery level changed"
-MSG_BATTERY_FULLY_CHARGED="🔋✅ Device %s battery is fully charged (100%%)"
-MSG_BATTERY_START_CHARGING="🔌 Device %s started charging"
-MSG_BATTERY_STOP_CHARGING="🔌❌ Device %s stopped charging"
-MSG_UNKNOWN_EVENT="❓ Unknown event received: %s at %s"
+MSG_LOCK_CONNECTED="🟢 Lock %s connected to the bridge"
+MSG_LOCK_DISCONNECTED="🔴 Lock %s disconnected from the bridge"
+MSG_LOCK_SETTINGS_CHANGED="⚙️ Lock %s settings have been changed"
+MSG_BATTERY_LEVEL_DEPLETED="🪫❗ (%s%%) Depleted battery for lock %s"
+MSG_BATTERY_LEVEL_CRITICAL="🪫🔴 (%s%%) Critical battery for lock %s"
+MSG_BATTERY_LEVEL_LOW="🔋🟠 (%s%%) Low battery for lock %s"
+MSG_BATTERY_LEVEL_MEDIUM="🔋🟡 (%s%%) Medium battery for lock %s"
+MSG_BATTERY_LEVEL_GOOD="🔋🟢 (%s%%) Good battery for lock %s"
+MSG_BATTERY_LEVEL_HIGH="🔋✅ (%s%%) High battery for lock %s"
+MSG_BATTERY_LEVEL_CHANGED_UNKNOWN="🔋❓ Lock %s battery level changed to unknown"
+MSG_BATTERY_FULLY_CHARGED="🔋✅ (100%%) Lock %s battery is fully charged"
+MSG_BATTERY_START_CHARGING="🔌 Lock %s started charging"
+MSG_BATTERY_STOP_CHARGING="🔌❌ Lock %s stopped charging"
+MSG_UNKNOWN_EVENT="❓ Unknown event '%s' for lock %s"
 
-# Lock state messages
-MSG_LOCK_STATE_UNCALIBRATED="🔧 Uncalibrated"
-MSG_LOCK_STATE_CALIBRATION="🔧 Calibrating"
-MSG_LOCK_STATE_UNLOCKED="🔓 Unlocked"
-MSG_LOCK_STATE_PARTIALLY_OPEN="🚪 Partially Open"
-MSG_LOCK_STATE_UNLOCKING="🔓 Unlocking..."
-MSG_LOCK_STATE_LOCKING="🔐 Locking..."
-MSG_LOCK_STATE_LOCKED="🔐 Locked"
-MSG_LOCK_STATE_PULL_SPRING="🔄 Pull Spring"
-MSG_LOCK_STATE_PULLING="🔄 Pulling..."
-MSG_LOCK_STATE_UNPULLING="🔄 Unpulling..."
-MSG_LOCK_STATE_UNKNOWN="❓ Unknown"
+# Lock state messages (complete messages with device ID)
+MSG_LOCK_STATE_UNCALIBRATED="🔧❌ Lock %s is uncalibrated"
+MSG_LOCK_STATE_CALIBRATION="🔧🔄 Lock %s is calibrating..."
+MSG_LOCK_STATE_UNLOCKED="🔓 Lock %s is unlocked"
+MSG_LOCK_STATE_PARTIALLY_OPEN="🚪 Lock %s is partially open"
+MSG_LOCK_STATE_UNLOCKING="🔓🔄 Lock %s is unlocking..."
+MSG_LOCK_STATE_LOCKING="🔐🔄 Lock %s is locking..."
+MSG_LOCK_STATE_LOCKED="🔐 Lock %s is locked"
+MSG_LOCK_STATE_PULL_SPRING="🔑 Lock %s has pull spring open"
+MSG_LOCK_STATE_PULLING="🔄🔑 Lock %s is pulling spring..."
+MSG_LOCK_STATE_UNPULLING="🔄🔑 Lock %s is unpulling spring..."
+MSG_LOCK_STATE_UNKNOWN="❓ Lock %s has unknown state"
 
-# Jammed state messages
-MSG_LOCK_NOT_JAMMED="✅ Not Jammed"
-MSG_LOCK_JAMMED="⚠️ Jammed"
-MSG_LOCK_JAMMED_UNKNOWN="❓ Unknown Jam Status"
-
-# Door state messages
-MSG_DOOR_STATE_NOT_PAIRED="🔗❌ Not Paired"
-MSG_DOOR_STATE_DISCONNECTED="🔴 Disconnected"
-MSG_DOOR_STATE_OPENED="🚪 Opened"
-MSG_DOOR_STATE_CLOSED="🚪✅ Closed"
-MSG_DOOR_STATE_UNCALIBRATED="🔧 Uncalibrated"
-MSG_DOOR_STATE_UNKNOWN="❓ Unknown Door State"
-
+# Jammed alert message
+MSG_LOCK_JAMMED_ALERT="🚨 The lock %s is jammed!"
