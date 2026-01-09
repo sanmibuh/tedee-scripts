@@ -9,6 +9,7 @@ MSG_DOOR_CLOSED="🔐 The door has been closed successfully."
 MSG_DOOR_FAILED="❌ The door has NOT been closed. Current state: %s"
 MSG_DOOR_ALREADY_CLOSED="🚪 The door was already closed."
 MSG_AUTH_FAILED="🔑❌ Authentication failed. Check your TEDEE_TOKEN and AUTH_TYPE in config/tedee.conf"
+MSG_SCRIPTS_UPDATED="📥 Tedee Scripts Updated\n\nScripts have been successfully updated to the latest version from branch: %s"
 
 # Callback event messages
 MSG_BACKEND_CONNECTED="🌐 Bridge connected to backend"

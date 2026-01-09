@@ -104,11 +104,18 @@ extract_and_update() {
 
 cd "$SCRIPT_DIR" || exit 1
 
+# Load configuration and locale
+load_config
+
 TEMP_DIR=$(download_latest_version) || exit 1
 
 extract_and_update "$TEMP_DIR" || exit 1
 
 log "INFO" "Repository location: $SCRIPT_DIR"
 log "INFO" "All scripts are up to date!"
+
+# Send Telegram notification about successful update
+send_telegram "$MSG_SCRIPTS_UPDATED" "$BRANCH"
+
 exit 0
 
