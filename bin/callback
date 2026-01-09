@@ -108,7 +108,22 @@ handle_device_battery_level_changed() {
     BATTERY=$(echo "$DATA" | grep -o '"batteryLevel":[0-9]*' | cut -d':' -f2)
 
     if [ -n "$BATTERY" ]; then
-        send_telegram "$MSG_BATTERY_LEVEL_CHANGED" "$DEVICE_ID" "$BATTERY"
+        # Select message based on battery level
+        if [ "$BATTERY" -le 10 ]; then
+            BATTERY_MSG="$MSG_BATTERY_LEVEL_DEPLETED"
+        elif [ "$BATTERY" -le 20 ]; then
+            BATTERY_MSG="$MSG_BATTERY_LEVEL_CRITICAL"
+        elif [ "$BATTERY" -le 40 ]; then
+            BATTERY_MSG="$MSG_BATTERY_LEVEL_LOW"
+        elif [ "$BATTERY" -le 60 ]; then
+            BATTERY_MSG="$MSG_BATTERY_LEVEL_MEDIUM"
+        elif [ "$BATTERY" -le 80 ]; then
+            BATTERY_MSG="$MSG_BATTERY_LEVEL_GOOD"
+        else
+            BATTERY_MSG="$MSG_BATTERY_LEVEL_HIGH"
+        fi
+
+        send_telegram "$BATTERY_MSG" "$BATTERY" "$DEVICE_ID"
         log "INFO" "Device $DEVICE_ID: Battery level changed to $BATTERY%"
     else
         send_telegram "$MSG_BATTERY_LEVEL_CHANGED_UNKNOWN" "$DEVICE_ID"
