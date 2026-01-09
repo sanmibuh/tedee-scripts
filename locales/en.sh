@@ -20,7 +20,7 @@ MSG_BATTERY_LEVEL_CHANGED_UNKNOWN="🔋 Lock %s battery level changed"
 MSG_BATTERY_FULLY_CHARGED="🔋✅ Lock %s battery is fully charged (100%%)"
 MSG_BATTERY_START_CHARGING="🔌 Lock %s started charging"
 MSG_BATTERY_STOP_CHARGING="🔌❌ Lock %s stopped charging"
-MSG_UNKNOWN_EVENT="❓ Unknown event received: %s at %s"
+MSG_UNKNOWN_EVENT="❓ Unknown event '%s' for lock %s"
 
 # Lock state messages (complete messages with device ID)
 MSG_LOCK_STATE_UNCALIBRATED="🔧❌ Lock %s is uncalibrated"

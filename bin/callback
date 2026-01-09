@@ -148,8 +148,9 @@ handle_device_battery_fully_charged() {
 
 # Handle unknown events
 handle_unknown_event() {
-    send_telegram "$MSG_UNKNOWN_EVENT" "$EVENT" "$TIMESTAMP"
-    log "WARN" "Unknown event type: $EVENT"
+    DEVICE_ID=$(get_device_id)
+    send_telegram "$MSG_UNKNOWN_EVENT" "$EVENT" "$DEVICE_ID"
+    log "WARN" "Unknown event type: $EVENT for device $DEVICE_ID"
 }
 
 # ===== INPUT VALIDATION =====

@@ -20,7 +20,7 @@ MSG_BATTERY_LEVEL_CHANGED_UNKNOWN="🔋 Nivel de batería de la cerradura %s cam
 MSG_BATTERY_FULLY_CHARGED="🔋✅ Batería de la cerradura %s completamente cargada (100%%)"
 MSG_BATTERY_START_CHARGING="🔌 Cerradura %s comenzó a cargar"
 MSG_BATTERY_STOP_CHARGING="🔌❌ Cerradura %s dejó de cargar"
-MSG_UNKNOWN_EVENT="❓ Evento desconocido recibido: %s el %s"
+MSG_UNKNOWN_EVENT="❓ Evento desconocido '%s' para la cerradura %s"
 
 # Lock state messages (complete messages with device ID)
 MSG_LOCK_STATE_UNCALIBRATED="🔧❌ La cerradura %s está sin calibrar"
