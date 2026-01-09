@@ -187,19 +187,14 @@ attempt_lock() {
 
 # Wait for door to close
 # Monitors the lock state until it reaches closed (state 6)
-# Sends a notification when closing begins (state 5)
 wait_for_closed() {
     MAX_WAIT=$((MAX_RETRIES * SLEEP_BETWEEN))
     ELAPSED=0
-    IN_PROGRESS=0
 
     while [ $ELAPSED -lt $MAX_WAIT ]; do
         STATE=$(get_lock_state)
         if [ "$STATE" = "6" ]; then
             return 0
-        elif [ "$STATE" = "5" ] && [ "$IN_PROGRESS" = "0" ]; then
-            IN_PROGRESS=1
-            send_telegram "$MSG_DOOR_CLOSING"
         fi
         sleep $SLEEP_BETWEEN
         ELAPSED=$((ELAPSED + SLEEP_BETWEEN))

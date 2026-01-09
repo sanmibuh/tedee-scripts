@@ -29,7 +29,6 @@ lock_door_with_retries() {
 # Notify final state
 notify_final_state() {
     if wait_for_closed; then
-        send_telegram "$MSG_DOOR_CLOSED"
         log "INFO" "Door closed successfully."
     else
         STATE=$(get_lock_state)
