@@ -45,12 +45,11 @@ handle_device_connection_changed() {
     # Parse connection status and device ID from data (format: {"deviceType":2,"deviceId":33819,"serialNumber":"19420103-000006","isConnected":1})
     IS_CONNECTED=$(get_is_connected)
     DEVICE_ID=$(get_device_id)
-
-    if [ "$IS_CONNECTED" = "1" ]; then
-        send_telegram "$MSG_DEVICE_CONNECTED" "$DEVICE_ID"
+    if [ "$CONNECTED" = "1" ]; then
+        send_telegram "$MSG_LOCK_CONNECTED" "$DEVICE_ID"
         log "INFO" "Device $DEVICE_ID connected"
     else
-        send_telegram "$MSG_DEVICE_DISCONNECTED" "$DEVICE_ID"
+        send_telegram "$MSG_LOCK_DISCONNECTED" "$DEVICE_ID"
         log "INFO" "Device $DEVICE_ID disconnected"
     fi
 }
@@ -61,7 +60,7 @@ handle_device_settings_changed() {
     # Parse device ID from data (format: {"deviceType":2,"deviceId":33819,"serialNumber":"19420103-000006"})
     DEVICE_ID=$(get_device_id)
 
-    send_telegram "$MSG_DEVICE_SETTINGS_CHANGED" "$DEVICE_ID"
+    send_telegram "$MSG_LOCK_SETTINGS_CHANGED" "$DEVICE_ID"
     log "INFO" "Device $DEVICE_ID settings changed"
 }
 

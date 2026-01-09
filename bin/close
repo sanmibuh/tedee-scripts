@@ -41,7 +41,7 @@ notify_final_state() {
 # Check if door is already closed
 check_door_closed() {
     if door_closed; then
-        send_telegram "$MSG_DOOR_ALREADY_CLOSED"
+        send_telegram "$MSG_LOCK_ALREADY_CLOSED"
         log "INFO" "Door is already closed. No action needed."
         exit 0
     fi

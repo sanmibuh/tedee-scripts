@@ -4,22 +4,22 @@
 
 # Telegram messages
 MSG_BRIDGE_OFFLINE="🔴 El Bridge Tedee no responde. Comprueba la conexión."
-MSG_DOOR_FAILED="❌ La puerta NO se ha cerrado. Estado actual: %s"
-MSG_DOOR_ALREADY_CLOSED="🚪 La puerta ya estaba cerrada."
+MSG_LOCK_FAILED="❌ La cerradura NO se ha cerrado. Estado actual: %s"
+MSG_LOCK_ALREADY_CLOSED="🚪 La cerradura ya estaba cerrada."
 MSG_AUTH_FAILED="🔑❌ Autenticación fallida. Verifica tu TEDEE_TOKEN y AUTH_TYPE en config/tedee.conf"
 MSG_SCRIPTS_UPDATED="📥 Scripts Tedee Actualizados\n\nLos scripts se han actualizado correctamente a la última versión desde la rama: %s"
 
 # Callback event messages
 MSG_BACKEND_CONNECTED="🌐 Bridge conectado al backend"
 MSG_BACKEND_DISCONNECTED="🌐❌ Bridge desconectado del backend"
-MSG_DEVICE_CONNECTED="🟢 Dispositivo %s conectado al bridge"
-MSG_DEVICE_DISCONNECTED="🔴 Dispositivo %s desconectado del bridge"
-MSG_DEVICE_SETTINGS_CHANGED="⚙️ La configuración del dispositivo %s ha sido modificada"
-MSG_BATTERY_LEVEL_CHANGED="🔋 Nivel de batería del dispositivo %s cambiado a %s%%"
-MSG_BATTERY_LEVEL_CHANGED_UNKNOWN="🔋 Nivel de batería del dispositivo %s cambiado"
-MSG_BATTERY_FULLY_CHARGED="🔋✅ Batería del dispositivo %s completamente cargada (100%%)"
-MSG_BATTERY_START_CHARGING="🔌 Dispositivo %s comenzó a cargar"
-MSG_BATTERY_STOP_CHARGING="🔌❌ Dispositivo %s dejó de cargar"
+MSG_LOCK_CONNECTED="🟢 Cerradura %s conectada al bridge"
+MSG_LOCK_DISCONNECTED="🔴 Cerradura %s desconectada del bridge"
+MSG_LOCK_SETTINGS_CHANGED="⚙️ La configuración de la cerradura %s ha sido modificada"
+MSG_BATTERY_LEVEL_CHANGED="🔋 Nivel de batería de la cerradura %s cambiado a %s%%"
+MSG_BATTERY_LEVEL_CHANGED_UNKNOWN="🔋 Nivel de batería de la cerradura %s cambiado"
+MSG_BATTERY_FULLY_CHARGED="🔋✅ Batería de la cerradura %s completamente cargada (100%%)"
+MSG_BATTERY_START_CHARGING="🔌 Cerradura %s comenzó a cargar"
+MSG_BATTERY_STOP_CHARGING="🔌❌ Cerradura %s dejó de cargar"
 MSG_UNKNOWN_EVENT="❓ Evento desconocido recibido: %s el %s"
 
 # Lock state messages (complete messages with device ID)
