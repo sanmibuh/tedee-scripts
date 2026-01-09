@@ -50,6 +50,14 @@ download_latest_version() {
     return 0
 }
 
+calculate_checksum() {
+    # Calculate checksum of all scripts excluding config
+    find "$SCRIPT_DIR" -type f \
+        ! -path "*/config/*" \
+        ! -path "*/.git/*" \
+        -exec shasum {} \; 2>/dev/null | sort | shasum | awk '{print $1}'
+}
+
 extract_and_update() {
     TEMP_DIR="$1"
 
@@ -72,6 +80,9 @@ extract_and_update() {
         return 1
     fi
 
+    log "INFO" "Calculating checksums before update..."
+    CHECKSUM_BEFORE=$(calculate_checksum)
+
     log "INFO" "Updating files..."
 
     # Preserve the config file if it exists
@@ -93,11 +104,20 @@ extract_and_update() {
     chmod +x "$SCRIPT_DIR/bin/"* 2>/dev/null
     chmod +x "$SCRIPT_DIR/setup.sh" 2>/dev/null
 
+    log "INFO" "Calculating checksums after update..."
+    CHECKSUM_AFTER=$(calculate_checksum)
+
     # Clean up
     rm -rf "$TEMP_DIR"
 
-    log "INFO" "Update completed successfully!"
-    return 0
+    # Check if there were changes
+    if [ "$CHECKSUM_BEFORE" = "$CHECKSUM_AFTER" ]; then
+        log "INFO" "No changes detected - scripts are already up to date"
+        return 2  # Special return code to indicate no changes
+    else
+        log "INFO" "Update completed successfully!"
+        return 0
+    fi
 }
 
 # ===== MAIN =====
@@ -109,13 +129,27 @@ load_config
 
 TEMP_DIR=$(download_latest_version) || exit 1
 
-extract_and_update "$TEMP_DIR" || exit 1
+extract_and_update "$TEMP_DIR"
+UPDATE_RESULT=$?
+
+if [ $UPDATE_RESULT -eq 1 ]; then
+    # Error occurred
+    exit 1
+fi
 
 log "INFO" "Repository location: $SCRIPT_DIR"
-log "INFO" "All scripts are up to date!"
 
-# Send Telegram notification about successful update
-send_telegram "$MSG_SCRIPTS_UPDATED" "$BRANCH"
+if [ $UPDATE_RESULT -eq 2 ]; then
+    # No changes detected
+    log "INFO" "All scripts are already up to date!"
+else
+    # Changes were applied
+    log "INFO" "All scripts are up to date!"
+    # Send Telegram notification about successful update
+    send_telegram "$MSG_SCRIPTS_UPDATED" "$BRANCH"
+fi
 
 exit 0
+
+
 
