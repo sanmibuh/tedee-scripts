@@ -87,10 +87,12 @@ handle_lock_status_changed() {
         8) STATE_MSG="$MSG_LOCK_STATE_PULLING" ;;
         9) STATE_MSG="$MSG_LOCK_STATE_UNKNOWN" ;;
         255) STATE_MSG="$MSG_LOCK_STATE_UNPULLING" ;;
-        *) STATE_MSG="$MSG_LOCK_STATE_UNKNOWN ($STATE)" ;;
+        *) STATE_MSG="$MSG_LOCK_STATE_UNKNOWN" ;;
     esac
 
-    send_telegram "$MSG_LOCK_STATUS_CHANGED" "$DEVICE_ID" "$STATE_MSG"
+    # Send telegram notification with the selected message
+    send_telegram "$STATE_MSG" "$DEVICE_ID"
+
     # Send separate notification if lock is jammed
     if [ "$JAMMED" = "1" ]; then
         send_telegram "$MSG_LOCK_JAMMED_ALERT" "$DEVICE_ID"
