@@ -17,10 +17,7 @@ MSG_BACKEND_DISCONNECTED="🌐❌ Bridge disconnected from backend"
 MSG_DEVICE_CONNECTED="🟢 Device %s connected to the bridge"
 MSG_DEVICE_DISCONNECTED="🔴 Device %s disconnected from the bridge"
 MSG_DEVICE_SETTINGS_CHANGED="⚙️ Device %s settings have been changed"
-MSG_LOCK_STATUS_CHANGED="🔄 Device %s status has changed:
-- Lock: %s
-- Jam: %s
-- Door: %s"
+MSG_LOCK_STATUS_CHANGED="🔄 Device %s lock state: %s"
 MSG_BATTERY_LEVEL_CHANGED="🔋 Device %s battery level changed to %s%%"
 MSG_BATTERY_LEVEL_CHANGED_UNKNOWN="🔋 Device %s battery level changed"
 MSG_BATTERY_FULLY_CHARGED="🔋✅ Device %s battery is fully charged (100%%)"
@@ -41,16 +38,5 @@ MSG_LOCK_STATE_PULLING="🔄 Pulling..."
 MSG_LOCK_STATE_UNPULLING="🔄 Unpulling..."
 MSG_LOCK_STATE_UNKNOWN="❓ Unknown"
 
-# Jammed state messages
-MSG_LOCK_NOT_JAMMED="✅ Not Jammed"
-MSG_LOCK_JAMMED="⚠️ Jammed"
-MSG_LOCK_JAMMED_UNKNOWN="❓ Unknown Jam Status"
-
-# Door state messages
-MSG_DOOR_STATE_NOT_PAIRED="🔗❌ Not Paired"
-MSG_DOOR_STATE_DISCONNECTED="🔴 Disconnected"
-MSG_DOOR_STATE_OPENED="🚪 Opened"
-MSG_DOOR_STATE_CLOSED="🚪✅ Closed"
-MSG_DOOR_STATE_UNCALIBRATED="🔧 Uncalibrated"
-MSG_DOOR_STATE_UNKNOWN="❓ Unknown Door State"
-
+# Jammed alert message
+MSG_LOCK_JAMMED_ALERT="🚨 The lock %s is jammed!"

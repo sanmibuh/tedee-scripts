@@ -90,24 +90,12 @@ handle_lock_status_changed() {
         *) STATE_MSG="$MSG_LOCK_STATE_UNKNOWN ($STATE)" ;;
     esac
 
-    # Map jammed status to message
-    case "$JAMMED" in
-        0) JAMMED_MSG="$MSG_LOCK_NOT_JAMMED" ;;
-        1) JAMMED_MSG="$MSG_LOCK_JAMMED" ;;
-        *) JAMMED_MSG="$MSG_LOCK_JAMMED_UNKNOWN" ;;
-    esac
+    send_telegram "$MSG_LOCK_STATUS_CHANGED" "$DEVICE_ID" "$STATE_MSG"
+    # Send separate notification if lock is jammed
+    if [ "$JAMMED" = "1" ]; then
+        send_telegram "$MSG_LOCK_JAMMED_ALERT" "$DEVICE_ID"
+    fi
 
-    # Map door state to message
-    case "$DOOR_STATE" in
-        0) DOOR_STATE_MSG="$MSG_DOOR_STATE_NOT_PAIRED" ;;
-        1) DOOR_STATE_MSG="$MSG_DOOR_STATE_DISCONNECTED" ;;
-        2) DOOR_STATE_MSG="$MSG_DOOR_STATE_OPENED" ;;
-        3) DOOR_STATE_MSG="$MSG_DOOR_STATE_CLOSED" ;;
-        4) DOOR_STATE_MSG="$MSG_DOOR_STATE_UNCALIBRATED" ;;
-        *) DOOR_STATE_MSG="$MSG_DOOR_STATE_UNKNOWN" ;;
-    esac
-
-    send_telegram "$MSG_LOCK_STATUS_CHANGED" "$DEVICE_ID" "$STATE_MSG" "$JAMMED_MSG" "$DOOR_STATE_MSG"
     log "INFO" "Device $DEVICE_ID: Lock state=$STATE, Jammed=$JAMMED, DoorState=$DOOR_STATE"
 }
 
